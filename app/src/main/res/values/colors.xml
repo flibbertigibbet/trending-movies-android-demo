@@ -8,7 +8,7 @@
 
     <!-- https://material.io/tools/color/#!/?view.left=0&view.right=0&primary.color=26A69A -->
     <color name="lightTealColor">#63d7cb</color>
-    <color name="darkTColor">#25a59a</color>
+    <color name="darkTealColor">#25a59a</color>
 
     <color name="secondaryTextColor">#000000</color>
 </resources>
