@@ -1,8 +1,10 @@
-package com.banderkat.trendingmovies.trendingmovies;
+package com.banderkat.trendingmovies;
 
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.widget.GridView;
+
+import com.banderkat.trendingmovies.trendingmovies.R;
 
 public class MainActivity extends AppCompatActivity {
 
