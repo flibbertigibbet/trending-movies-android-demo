@@ -1,6 +1,14 @@
-<?xml version="1.0" encoding="utf-8"?>
+<!--?xml version="1.0" encoding="UTF-8"?-->
 <resources>
-    <color name="colorPrimary">#3F51B5</color>
-    <color name="colorPrimaryDark">#303F9F</color>
-    <color name="colorAccent">#FF4081</color>
+    <!-- https://material.io/tools/color/#!/?view.left=0&view.right=0&primary.color=212121 -->
+    <color name="primaryColor">#212121</color>
+    <color name="primaryLightColor">#484848</color>
+    <color name="primaryDarkColor">#000000</color>
+    <color name="primaryTextColor">#ffffff</color>
+
+    <!-- https://material.io/tools/color/#!/?view.left=0&view.right=0&primary.color=26A69A -->
+    <color name="lightTealColor">#63d7cb</color>
+    <color name="darkTealColor">#25a59a</color>
+
+    <color name="secondaryTextColor">#000000</color>
 </resources>
