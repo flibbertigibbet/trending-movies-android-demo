@@ -23,6 +23,9 @@ public class  MoviePosterAdapter extends BaseAdapter {
     private final LayoutInflater inflater;
     private final Picasso picasso;
 
+    private static final int NUM_COLUMNS = 2;
+    private static final double ASPECT_RATIO = 1.5;
+
     private static class ViewHolder {
         ImageView imageView;
     }
@@ -68,13 +71,15 @@ public class  MoviePosterAdapter extends BaseAdapter {
             convertView = inflater.inflate(R.layout.poster_grid_item, parent, false);
             viewHolder = new ViewHolder();
             viewHolder.imageView = convertView.findViewById(R.id.poster_grid_item_image);
-
             convertView.setTag(viewHolder);
+            // set minimum height relative to column width
+            int imageWidth = parent.getWidth() / NUM_COLUMNS;
+            viewHolder.imageView.setMinimumHeight((int)(ASPECT_RATIO * imageWidth));
         } else {
             viewHolder = (ViewHolder) convertView.getTag();
         }
 
-        picasso.load(EXAMPLE_POSTER_URL).into(viewHolder.imageView);
+        picasso.load(EXAMPLE_POSTER_URL).fit().into(viewHolder.imageView);
 
         // FIXME: load data and set description for image
         viewHolder.imageView.setContentDescription("FIXME");
