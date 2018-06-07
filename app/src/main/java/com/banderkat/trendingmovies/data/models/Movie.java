@@ -1,12 +1,16 @@
 package com.banderkat.trendingmovies.data.models;
 
 import android.arch.persistence.room.Entity;
+import android.arch.persistence.room.Ignore;
 import android.arch.persistence.room.PrimaryKey;
 
 import com.google.gson.annotations.SerializedName;
 
 @Entity
 public class Movie {
+
+    @Ignore
+    public static final String POSTER_PATH_BASE = "http://image.tmdb.org/t/p/w185/";
 
     @PrimaryKey
     private final long id;
@@ -56,10 +60,10 @@ public class Movie {
         this.voteAverage = voteAverage;
         this.title = title;
         this.popularity = popularity;
-        this.posterPath = posterPath;
+        this.posterPath = posterPath != null && !posterPath.isEmpty() ? POSTER_PATH_BASE + posterPath : "";
         this.originalLanguage = originalLanguage;
         this.originalTitle = originalTitle;
-        this.backdropPath = backdropPath;
+        this.backdropPath = backdropPath != null && !backdropPath.isEmpty() ? POSTER_PATH_BASE + backdropPath : "";
         this.adult = adult;
         this.overview = overview;
         this.releaseDate = releaseDate;

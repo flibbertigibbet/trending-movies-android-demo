@@ -9,13 +9,14 @@ import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.ImageView;
 
+import com.banderkat.trendingmovies.data.models.Movie;
 import com.banderkat.trendingmovies.trendingmovies.R;
 import com.squareup.picasso.Picasso;
 
+import java.util.List;
+
 
 public class  MoviePosterAdapter extends BaseAdapter {
-
-    public static final String EXAMPLE_POSTER_URL = "http://image.tmdb.org/t/p/w185//nBNZadXqJSdt05SHLqgT0HuC5Gm.jpg";
 
     private static final String LOG_LABEL = "PosterAdapter";
 
@@ -26,23 +27,23 @@ public class  MoviePosterAdapter extends BaseAdapter {
     private static final int NUM_COLUMNS = 2;
     private static final double ASPECT_RATIO = 1.5;
 
+    private List<Movie> movies;
+
     private static class ViewHolder {
         ImageView imageView;
     }
 
-    public MoviePosterAdapter(Context context) {
+    public MoviePosterAdapter(Context context, List<Movie> movies) {
         this.context = context;
+        this.movies = movies;
         this.inflater = LayoutInflater.from(context);
 
         // configure Picasso with logging
         Picasso.Builder builder = new Picasso.Builder(context);
         builder.loggingEnabled(true);
-        builder.listener(new Picasso.Listener() {
-            @Override
-            public void onImageLoadFailed(Picasso picasso, Uri uri, Exception exception) {
-                Log.e(LOG_LABEL, "Failed to load image from " + uri.toString());
-                exception.printStackTrace();
-            }
+        builder.listener((picasso, uri, exception) -> {
+            Log.e(LOG_LABEL, "Failed to load image from " + uri.toString());
+            exception.printStackTrace();
         });
 
         picasso = builder.build();
@@ -50,17 +51,17 @@ public class  MoviePosterAdapter extends BaseAdapter {
 
     @Override
     public int getCount() {
-        return 12;
+        return movies.size();
     }
 
     @Override
-    public Object getItem(int position) {
-        return null;
+    public Movie getItem(int position) {
+        return movies.get(position);
     }
 
     @Override
     public long getItemId(int position) {
-        return position;
+        return getItem(position).getId();
     }
 
     @Override
@@ -79,10 +80,9 @@ public class  MoviePosterAdapter extends BaseAdapter {
             viewHolder = (ViewHolder) convertView.getTag();
         }
 
-        picasso.load(EXAMPLE_POSTER_URL).fit().into(viewHolder.imageView);
-
-        // FIXME: load data and set description for image
-        viewHolder.imageView.setContentDescription("FIXME");
+        Movie movie = getItem(position);
+        picasso.load(movie.getPosterPath()).fit().into(viewHolder.imageView);
+        viewHolder.imageView.setContentDescription(movie.getTitle());
 
         return convertView;
     }

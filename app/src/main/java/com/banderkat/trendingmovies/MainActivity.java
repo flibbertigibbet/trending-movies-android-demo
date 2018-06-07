@@ -32,7 +32,6 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         gridView = findViewById(R.id.main_activity_gridview);
-        gridView.setAdapter(new MoviePosterAdapter(this));
 
         Log.d(LOG_LABEL, "Going to query for data");
 
@@ -61,6 +60,8 @@ public class MainActivity extends AppCompatActivity {
             for (Movie movie: response.data) {
                 Log.d(LOG_LABEL, "Movie: " + movie.toString());
             }
+
+            gridView.setAdapter(new MoviePosterAdapter(this, response.data));
 
         });
     }

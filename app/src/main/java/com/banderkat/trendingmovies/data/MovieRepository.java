@@ -5,7 +5,6 @@ import android.content.Context;
 import android.support.annotation.NonNull;
 
 import com.banderkat.trendingmovies.data.models.Movie;
-import com.banderkat.trendingmovies.data.models.MovieQueryResponse;
 import com.banderkat.trendingmovies.data.networkresource.MovieNetworkBoundResource;
 import com.banderkat.trendingmovies.data.networkresource.Resource;
 
@@ -31,10 +30,6 @@ public class MovieRepository {
     public LiveData<Movie> getMovie(long movieId) {
         // return a LiveData item directly from the database.
         return movieDao.getMovie(movieId);
-    }
-
-    public LiveData<List<Movie>> getMovies() {
-        return movieDao.getPopularMovies();
     }
 
     public LiveData<Resource<List<Movie>>> loadMovies() {
