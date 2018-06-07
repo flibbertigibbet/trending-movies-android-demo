@@ -2,6 +2,7 @@ package com.banderkat.trendingmovies.di;
 
 import android.app.Application;
 import android.arch.persistence.room.Room;
+import android.content.Context;
 
 import com.banderkat.trendingmovies.data.MovieDao;
 import com.banderkat.trendingmovies.data.MovieDatabase;
@@ -65,5 +66,11 @@ class AppModule {
     @Provides
     MovieDao provideMovieDao(MovieDatabase db) {
         return db.movieDao();
+    }
+
+    @Singleton
+    @Provides
+    Context provideContext(Application app) {
+        return app.getApplicationContext();
     }
 }
