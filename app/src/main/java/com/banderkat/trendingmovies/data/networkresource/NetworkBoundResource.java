@@ -19,6 +19,8 @@ public abstract class NetworkBoundResource<ResultType, RequestType> {
 
     private static final String LOG_LABEL = "NetworkBound";
 
+    public static final long FIRST_PAGE = 1;
+
     private final MediatorLiveData<Resource<ResultType>> result = new MediatorLiveData<>();
 
     // Called to save the result of the API response into the database
@@ -26,9 +28,9 @@ public abstract class NetworkBoundResource<ResultType, RequestType> {
     protected abstract void saveCallResult(@NonNull RequestType item);
 
     // Called with the data in the database to decide whether it should be
-    // fetched from the network.
+    // fetched from the network. Returns next page ID.
     @MainThread
-    protected abstract boolean shouldFetch(@Nullable ResultType data);
+    protected abstract long pageToFetch(@Nullable ResultType data);
 
     // Called to get the cached data from the database
     @NonNull @MainThread
@@ -37,7 +39,7 @@ public abstract class NetworkBoundResource<ResultType, RequestType> {
     // Called to create the API call.
     @NonNull
     @MainThread
-    protected abstract LiveData<ApiResponse<RequestType>> createCall();
+    protected abstract LiveData<ApiResponse<RequestType>> createCall(long pageNumber);
 
     // Called when the fetch fails. The child class may want to reset components
     // like rate limiter.
@@ -53,8 +55,9 @@ public abstract class NetworkBoundResource<ResultType, RequestType> {
         LiveData<ResultType> dbSource = loadFromDb();
         result.addSource(dbSource, data -> {
             result.removeSource(dbSource);
-            if (shouldFetch(data)) {
-                fetchFromNetwork(dbSource);
+            long pageNumber = pageToFetch(data);
+            if (pageNumber >= FIRST_PAGE) {
+                fetchFromNetwork(dbSource, pageNumber);
             } else {
                 //noinspection ConstantConditions
                 result.addSource(dbSource,
@@ -63,8 +66,8 @@ public abstract class NetworkBoundResource<ResultType, RequestType> {
         });
     }
 
-    private void fetchFromNetwork(final LiveData<ResultType> dbSource) {
-        LiveData<ApiResponse<RequestType>> apiResponse = createCall();
+    private void fetchFromNetwork(final LiveData<ResultType> dbSource, long pageNumber) {
+        LiveData<ApiResponse<RequestType>> apiResponse = createCall(pageNumber);
         // we re-attach dbSource as a new source,
         // it will dispatch its latest value quickly
         result.addSource(dbSource,

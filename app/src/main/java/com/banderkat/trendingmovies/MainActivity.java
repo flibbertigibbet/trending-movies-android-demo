@@ -3,8 +3,8 @@ package com.banderkat.trendingmovies;
 import android.arch.lifecycle.ViewModelProviders;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.RecyclerView;
 import android.util.Log;
-import android.widget.GridView;
 
 import com.banderkat.trendingmovies.data.MovieViewModel;
 import com.banderkat.trendingmovies.data.models.Movie;
@@ -24,20 +24,20 @@ public class MainActivity extends AppCompatActivity {
     @SuppressWarnings("WeakerAccess")
     MovieViewModel viewModel;
 
-    GridView gridView;
+    RecyclerView recyclerView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        gridView = findViewById(R.id.main_activity_gridview);
+        recyclerView = findViewById(R.id.main_activity_gridview);
 
         Log.d(LOG_LABEL, "Going to query for data");
 
         viewModel = ViewModelProviders.of(this, viewModelFactory)
                 .get(MovieViewModel.class);
-        viewModel.loadMovies().observe(this, response -> {
+        viewModel.loadMovies(false).observe(this, response -> {
             if (response == null || response.data == null) {
                 if (response != null) {
                     if (response.status == Status.LOADING) {
@@ -61,7 +61,9 @@ public class MainActivity extends AppCompatActivity {
                 Log.d(LOG_LABEL, "Movie: " + movie.toString());
             }
 
-            gridView.setAdapter(new MoviePosterAdapter(this, response.data));
+
+            MoviePosterAdapter adapter = new MoviePosterAdapter(this, response.data);
+            recyclerView.setAdapter(adapter);
 
         });
     }

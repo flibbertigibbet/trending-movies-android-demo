@@ -1,6 +1,7 @@
 package com.banderkat.trendingmovies.data;
 
 import android.arch.lifecycle.LiveData;
+import android.arch.paging.PagedList;
 import android.content.Context;
 import android.support.annotation.NonNull;
 
@@ -32,12 +33,17 @@ public class MovieRepository {
         return movieDao.getMovie(movieId);
     }
 
-    public LiveData<Resource<List<Movie>>> loadMovies() {
-        return new MovieNetworkBoundResource(webservice, movieDao, context) {
+    public LiveData<Resource<PagedList<Movie>>> loadMovies(boolean isTrending) {
+        long pageNumber = 1;
+        return new MovieNetworkBoundResource(webservice, movieDao, context, isTrending, pageNumber) {
             @NonNull
             @Override
-            protected LiveData<List<Movie>> loadFromDb() {
-                return movieDao.getPopularMovies();
+            protected LiveData<PagedList<Movie>> loadFromDb() {
+                if (isTrending) {
+                    return movieDao.getTrendingMovies(pageNumber);
+                } else {
+                    return movieDao.getPopularMovies(pageNumber);
+                }
             }
         }.getAsLiveData();
     }
