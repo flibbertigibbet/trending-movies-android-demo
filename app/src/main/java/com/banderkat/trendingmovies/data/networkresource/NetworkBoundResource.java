@@ -19,7 +19,7 @@ public abstract class NetworkBoundResource<ResultType, RequestType> {
 
     private static final String LOG_LABEL = "NetworkBound";
 
-    public static final long FIRST_PAGE = 1;
+    public static final int FIRST_PAGE = 1;
 
     private final MediatorLiveData<Resource<ResultType>> result = new MediatorLiveData<>();
 
@@ -30,16 +30,16 @@ public abstract class NetworkBoundResource<ResultType, RequestType> {
     // Called with the data in the database to decide whether it should be
     // fetched from the network. Returns next page ID.
     @MainThread
-    protected abstract long pageToFetch(@Nullable ResultType data);
+    protected abstract int pageToFetch(@Nullable ResultType data);
 
     // Called to get the cached data from the database
     @NonNull @MainThread
-    protected abstract LiveData<ResultType> loadFromDb();
+    protected abstract LiveData<ResultType> loadFromDb(int pageNumber);
 
     // Called to create the API call.
     @NonNull
     @MainThread
-    protected abstract LiveData<ApiResponse<RequestType>> createCall(long pageNumber);
+    protected abstract LiveData<ApiResponse<RequestType>> createCall(int pageNumber);
 
     // Called when the fetch fails. The child class may want to reset components
     // like rate limiter.
@@ -52,10 +52,10 @@ public abstract class NetworkBoundResource<ResultType, RequestType> {
     @MainThread
     protected NetworkBoundResource() {
         result.setValue(Resource.loading(null));
-        LiveData<ResultType> dbSource = loadFromDb();
+        LiveData<ResultType> dbSource = loadFromDb(FIRST_PAGE);
         result.addSource(dbSource, data -> {
             result.removeSource(dbSource);
-            long pageNumber = pageToFetch(data);
+            int pageNumber = pageToFetch(data);
             if (pageNumber >= FIRST_PAGE) {
                 fetchFromNetwork(dbSource, pageNumber);
             } else {
@@ -66,7 +66,7 @@ public abstract class NetworkBoundResource<ResultType, RequestType> {
         });
     }
 
-    private void fetchFromNetwork(final LiveData<ResultType> dbSource, long pageNumber) {
+    private void fetchFromNetwork(final LiveData<ResultType> dbSource, int pageNumber) {
         LiveData<ApiResponse<RequestType>> apiResponse = createCall(pageNumber);
         // we re-attach dbSource as a new source,
         // it will dispatch its latest value quickly
@@ -77,7 +77,7 @@ public abstract class NetworkBoundResource<ResultType, RequestType> {
             result.removeSource(dbSource);
             //noinspection ConstantConditions
             if (response.isSuccessful()) {
-                saveResultAndReInit(response);
+                saveResultAndReInit(response, pageNumber);
             } else {
                 onFetchFailed();
                 result.addSource(dbSource,
@@ -89,7 +89,7 @@ public abstract class NetworkBoundResource<ResultType, RequestType> {
 
     @SuppressLint("StaticFieldLeak")
     @MainThread
-    private void saveResultAndReInit(ApiResponse<RequestType> response) {
+    private void saveResultAndReInit(ApiResponse<RequestType> response, int pageNumber) {
         new AsyncTask<Void, Void, Void>() {
 
             @Override
@@ -109,7 +109,7 @@ public abstract class NetworkBoundResource<ResultType, RequestType> {
                 // otherwise we will get immediately last cached value,
                 // which may not be updated with latest results received from network.
                 //noinspection ConstantConditions
-                result.addSource(loadFromDb(),
+                result.addSource(loadFromDb(pageNumber),
                         newData -> result.setValue(Resource.success(newData)));
             }
         }.execute();

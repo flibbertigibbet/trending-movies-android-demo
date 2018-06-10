@@ -1,6 +1,7 @@
 package com.banderkat.trendingmovies.data.networkresource;
 
 import android.arch.lifecycle.LiveData;
+import android.arch.paging.DataSource;
 import android.arch.paging.LivePagedListBuilder;
 import android.arch.paging.PagedList;
 import android.content.Context;
@@ -9,6 +10,7 @@ import android.support.annotation.Nullable;
 import android.util.Log;
 
 import com.banderkat.trendingmovies.data.MovieDao;
+import com.banderkat.trendingmovies.data.MovieRepository;
 import com.banderkat.trendingmovies.data.MovieWebservice;
 import com.banderkat.trendingmovies.data.models.Movie;
 import com.banderkat.trendingmovies.data.models.MovieQueryResponse;
@@ -16,6 +18,7 @@ import com.banderkat.trendingmovies.trendingmovies.R;
 
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+
 
 public class MovieNetworkBoundResource extends NetworkBoundResource<PagedList<Movie>, MovieQueryResponse> {
 
@@ -32,10 +35,17 @@ public class MovieNetworkBoundResource extends NetworkBoundResource<PagedList<Mo
     private final boolean isTrending;
 
     public MovieNetworkBoundResource(MovieWebservice webservice, MovieDao movieDao, Context context, boolean isTrending) {
+        Log.d(LOG_LABEL, "Constructing network bound resource");
         this.webservice = webservice;
         this.movieDao = movieDao;
         this.apiKey = context.getString(R.string.api_key);
         this.isTrending = isTrending;
+
+        if (movieDao != null) {
+            Log.d(LOG_LABEL, "Constructed with DAO");
+        } else {
+            Log.d(LOG_LABEL, "Missing DAO in constructor");
+        }
     }
 
     @Override
@@ -65,7 +75,7 @@ public class MovieNetworkBoundResource extends NetworkBoundResource<PagedList<Mo
     }
 
     @Override
-    protected long pageToFetch(@Nullable PagedList<Movie> data) {
+    protected int pageToFetch(@Nullable PagedList<Movie> data) {
         if (data == null || data.isEmpty()) {
             return FIRST_PAGE;
         }
@@ -79,7 +89,7 @@ public class MovieNetworkBoundResource extends NetworkBoundResource<PagedList<Mo
         boolean expired = System.currentTimeMillis() - first.getTimestamp() > RATE_LIMIT;
         if (expired) {
             movieDao.clear(); // throw out the full cache
-            return pageNum;
+            return (int)pageNum;
         } else {
             return -1; // flag to not fetch
         }
@@ -87,13 +97,36 @@ public class MovieNetworkBoundResource extends NetworkBoundResource<PagedList<Mo
 
     @NonNull
     @Override
-    protected LiveData<PagedList<Movie>> loadFromDb() {
-        return new LivePagedListBuilder<>(movieDao.getPopularMovies(), 20).setBoundaryCallback(new PagedList.BoundaryCallback<Movie>() {
+    protected LiveData<PagedList<Movie>> loadFromDb(int pageNumber) {
+        if (movieDao != null) {
+            Log.d(LOG_LABEL, "Have DAO");
+        } else {
+            // FIXME: this is happening
+            Log.e(LOG_LABEL, "Have no DAO");
+            ///////////////////////////////////////////////////
+        }
+
+        DataSource.Factory<Integer, Movie> factory = movieDao.getPopularMovies(pageNumber);
+
+        if (factory != null) {
+            Log.d(LOG_LABEL, "Have factory");
+            DataSource<Integer, Movie> source = factory.create();
+            if (source != null) {
+                Log.d(LOG_LABEL, "have data source");
+            } else {
+                Log.e(LOG_LABEL, "Have no data source");
+            }
+        } else {
+            Log.e(LOG_LABEL, "No factory!");
+        }
+
+        return new LivePagedListBuilder<>(movieDao.getPopularMovies(pageNumber), MovieRepository.PAGE_SIZE)
+                .setBoundaryCallback(new PagedList.BoundaryCallback<Movie>() {
 
             @Override
             public void onZeroItemsLoaded() {
                 super.onZeroItemsLoaded();
-                movieDao.getPopularMovies();
+                movieDao.getPopularMovies(pageNumber);
             }
 
             @Override
@@ -104,14 +137,14 @@ public class MovieNetworkBoundResource extends NetworkBoundResource<PagedList<Mo
             @Override
             public void onItemAtEndLoaded(@NonNull Movie itemAtEnd) {
                 super.onItemAtEndLoaded(itemAtEnd);
-                movieDao.getPopularMovies();
+                movieDao.getPopularMovies(pageNumber);
             }
-        }).setInitialLoadKey(1L).build();
+        }).setInitialLoadKey(1).build();
     }
 
     @NonNull
     @Override
-    protected LiveData<ApiResponse<MovieQueryResponse>> createCall(long pageNum) {
-        return webservice.getPopularMovies(apiKey, pageNum);
+    protected LiveData<ApiResponse<MovieQueryResponse>> createCall(int pageNum) {
+        return webservice.getPopularMovies(apiKey, (long)pageNum);
     }
 }

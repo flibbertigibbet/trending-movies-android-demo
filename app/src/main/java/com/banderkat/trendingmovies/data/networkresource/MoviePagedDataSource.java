@@ -5,7 +5,7 @@ import android.support.annotation.NonNull;
 
 import com.banderkat.trendingmovies.data.models.Movie;
 
-public class MoviePagedDataSource extends PageKeyedDataSource<Long, Movie> {
+public class MoviePagedDataSource extends PageKeyedDataSource<Integer, Movie> {
     @Override
     public void loadInitial(@NonNull LoadInitialParams params, @NonNull LoadInitialCallback callback) {
 

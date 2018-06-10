@@ -1,8 +1,6 @@
 package com.banderkat.trendingmovies.data;
 
 import android.arch.lifecycle.LiveData;
-import android.arch.paging.PageKeyedDataSource;
-import android.arch.paging.PagedList;
 import android.arch.persistence.room.Dao;
 import android.arch.persistence.room.Delete;
 import android.arch.persistence.room.Insert;
@@ -18,11 +16,11 @@ import java.util.List;
 @Dao
 public abstract class MovieDao {
 
-    @Query("SELECT * from movie ORDER BY popular_page ASC, popular_page_order ASC")
-    public abstract MoviePagedDataSource.Factory<Long, Movie> getPopularMovies();
+    @Query("SELECT * from movie WHERE popular_page = :pageNumber ORDER BY popular_page_order ASC")
+    public abstract MoviePagedDataSource.Factory<Integer, Movie> getPopularMovies(int pageNumber);
 
-    @Query("SELECT * from movie ORDER BY trending_page, trending_page_order")
-    public abstract MoviePagedDataSource.Factory<Long, Movie> getTrendingMovies();
+    @Query("SELECT * from movie WHERE trending_page = :pageNumber ORDER BY trending_page_order ASC")
+    public abstract MoviePagedDataSource.Factory<Integer, Movie> getTrendingMovies(long pageNumber);
 
     @Query("SELECT * from movie")
     public abstract LiveData<List<Movie>> getMovies();

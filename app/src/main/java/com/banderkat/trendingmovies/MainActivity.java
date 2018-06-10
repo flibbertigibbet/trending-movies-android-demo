@@ -37,6 +37,11 @@ public class MainActivity extends AppCompatActivity {
 
         viewModel = ViewModelProviders.of(this, viewModelFactory)
                 .get(MovieViewModel.class);
+        if (viewModel == null) {
+            Log.d(LOG_LABEL, "No view model");
+        } else {
+            Log.d(LOG_LABEL, "Have view model");
+        }
         viewModel.loadMovies(false).observe(this, response -> {
             if (response == null || response.data == null) {
                 if (response != null) {
