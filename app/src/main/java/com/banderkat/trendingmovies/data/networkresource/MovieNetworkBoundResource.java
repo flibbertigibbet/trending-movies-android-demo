@@ -4,7 +4,8 @@ import android.arch.lifecycle.LiveData;
 import android.arch.paging.DataSource;
 import android.arch.paging.LivePagedListBuilder;
 import android.arch.paging.PagedList;
-import android.content.Context;
+import android.os.AsyncTask;
+import android.support.annotation.MainThread;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Log;
@@ -14,7 +15,6 @@ import com.banderkat.trendingmovies.data.MovieRepository;
 import com.banderkat.trendingmovies.data.MovieWebservice;
 import com.banderkat.trendingmovies.data.models.Movie;
 import com.banderkat.trendingmovies.data.models.MovieQueryResponse;
-import com.banderkat.trendingmovies.trendingmovies.R;
 
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -27,25 +27,21 @@ public class MovieNetworkBoundResource extends NetworkBoundResource<PagedList<Mo
     // maximum rate at which to refresh data from network
     private static final long RATE_LIMIT = TimeUnit.MINUTES.toMillis(15);
 
-    private final MovieWebservice webservice;
-    private final MovieDao movieDao;
-    private final String apiKey;
+    public String apiKey;
 
     // if true, query is for trending, if false, query is for most popular
-    private final boolean isTrending;
+    private boolean isTrending;
 
-    public MovieNetworkBoundResource(MovieWebservice webservice, MovieDao movieDao, Context context, boolean isTrending) {
-        Log.d(LOG_LABEL, "Constructing network bound resource");
-        this.webservice = webservice;
+    public MovieDao movieDao;
+    public MovieWebservice movieWebservice;
+
+    public MovieNetworkBoundResource(MovieDao movieDao, MovieWebservice movieWebservice, String apiKey) {
+        super();
         this.movieDao = movieDao;
-        this.apiKey = context.getString(R.string.api_key);
-        this.isTrending = isTrending;
+        this.movieWebservice = movieWebservice;
+        this.apiKey = apiKey;
 
-        if (movieDao != null) {
-            Log.d(LOG_LABEL, "Constructed with DAO");
-        } else {
-            Log.d(LOG_LABEL, "Missing DAO in constructor");
-        }
+        setupSource();
     }
 
     @Override
@@ -88,6 +84,7 @@ public class MovieNetworkBoundResource extends NetworkBoundResource<PagedList<Mo
         }
         boolean expired = System.currentTimeMillis() - first.getTimestamp() > RATE_LIMIT;
         if (expired) {
+
             movieDao.clear(); // throw out the full cache
             return (int)pageNum;
         } else {
@@ -98,24 +95,11 @@ public class MovieNetworkBoundResource extends NetworkBoundResource<PagedList<Mo
     @NonNull
     @Override
     protected LiveData<PagedList<Movie>> loadFromDb(int pageNumber) {
-        if (movieDao != null) {
-            Log.d(LOG_LABEL, "Have DAO");
-        } else {
-            // FIXME: this is happening
-            Log.e(LOG_LABEL, "Have no DAO");
-            ///////////////////////////////////////////////////
-        }
-
         DataSource.Factory<Integer, Movie> factory = movieDao.getPopularMovies(pageNumber);
 
         if (factory != null) {
             Log.d(LOG_LABEL, "Have factory");
             DataSource<Integer, Movie> source = factory.create();
-            if (source != null) {
-                Log.d(LOG_LABEL, "have data source");
-            } else {
-                Log.e(LOG_LABEL, "Have no data source");
-            }
         } else {
             Log.e(LOG_LABEL, "No factory!");
         }
@@ -145,6 +129,10 @@ public class MovieNetworkBoundResource extends NetworkBoundResource<PagedList<Mo
     @NonNull
     @Override
     protected LiveData<ApiResponse<MovieQueryResponse>> createCall(int pageNum) {
-        return webservice.getPopularMovies(apiKey, (long)pageNum);
+        return movieWebservice.getPopularMovies(apiKey, (long)pageNum);
+    }
+
+    public void setIsTrending(boolean isTrending) {
+        this.isTrending = isTrending;
     }
 }

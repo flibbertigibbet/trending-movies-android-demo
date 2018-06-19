@@ -29,7 +29,6 @@ public abstract class NetworkBoundResource<ResultType, RequestType> {
 
     // Called with the data in the database to decide whether it should be
     // fetched from the network. Returns next page ID.
-    @MainThread
     protected abstract int pageToFetch(@Nullable ResultType data);
 
     // Called to get the cached data from the database
@@ -50,7 +49,7 @@ public abstract class NetworkBoundResource<ResultType, RequestType> {
     }
 
     @MainThread
-    protected NetworkBoundResource() {
+    protected void setupSource() {
         result.setValue(Resource.loading(null));
         LiveData<ResultType> dbSource = loadFromDb(FIRST_PAGE);
         result.addSource(dbSource, data -> {

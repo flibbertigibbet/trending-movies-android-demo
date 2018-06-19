@@ -7,6 +7,7 @@ import android.arch.persistence.room.Insert;
 import android.arch.persistence.room.OnConflictStrategy;
 import android.arch.persistence.room.Query;
 import android.arch.persistence.room.Update;
+import android.os.AsyncTask;
 
 import com.banderkat.trendingmovies.data.models.Movie;
 import com.banderkat.trendingmovies.data.networkresource.MoviePagedDataSource;
@@ -28,8 +29,17 @@ public abstract class MovieDao {
     @Query("SELECT * FROM movie WHERE id = :movieId")
     public abstract LiveData<Movie> getMovie(long movieId);
 
+    @SuppressWarnings("StaticFieldLeak")
     @Query("DELETE FROM movie")
-    public abstract void clear();
+    public void clear() {
+        new AsyncTask<Void, Void, Void>() {
+            @Override
+            protected Void doInBackground(Void... voids) {
+                clear();
+                return null;
+            }
+        }.execute();
+    }
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     public abstract void save(Movie obj);

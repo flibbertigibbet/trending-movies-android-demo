@@ -1,47 +1,57 @@
 package com.banderkat.trendingmovies;
 
+import android.arch.paging.PagedList;
 import android.arch.paging.PagedListAdapter;
 import android.content.Context;
+import android.databinding.BindingAdapter;
+import android.databinding.DataBindingUtil;
+import android.databinding.ViewDataBinding;
 import android.support.annotation.NonNull;
 import android.support.v7.util.DiffUtil;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
-import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 
 import com.banderkat.trendingmovies.data.models.Movie;
+import com.banderkat.trendingmovies.trendingmovies.BR;
 import com.banderkat.trendingmovies.trendingmovies.R;
 import com.squareup.picasso.Picasso;
 
-import java.util.List;
 import java.util.Objects;
+
+import static com.banderkat.trendingmovies.MainActivity.NUM_COLUMNS;
 
 
 public class  MoviePosterAdapter extends PagedListAdapter {
 
     private static final String LOG_LABEL = "PosterAdapter";
 
-    private final Context context;
-    private final LayoutInflater inflater;
-    private final Picasso picasso;
+    private LayoutInflater inflater;
 
-    private static final int NUM_COLUMNS = 2;
     private static final double ASPECT_RATIO = 1.5;
 
-    private List<Movie> movies;
+    private PagedList<Movie> movies;
+    private int parentWidth;
 
-    private static class ViewHolder extends RecyclerView.ViewHolder {
-        ImageView imageView;
+    private static class PosterViewHolder extends RecyclerView.ViewHolder {
 
-        public ViewHolder(ImageView itemView) {
-            super(itemView);
-            this.imageView = itemView;
+        private final ViewDataBinding binding;
+
+        PosterViewHolder(ViewDataBinding binding) {
+            super(binding.getRoot());
+            this.binding = binding;
+        }
+
+        public void bind(Movie info) {
+            binding.setVariable(BR.movie, info);
+            binding.setVariable(BR.position, getAdapterPosition());
+            binding.executePendingBindings();
         }
     }
 
-    public MoviePosterAdapter(Context context, List<Movie> movies) {
+    public MoviePosterAdapter() {
         super(new DiffUtil.ItemCallback<Movie>() {
             @Override
             public boolean areItemsTheSame(Movie oldItem, Movie newItem) {
@@ -59,19 +69,12 @@ public class  MoviePosterAdapter extends PagedListAdapter {
                 return Objects.equals(oldItem, newItem);
             }
         });
-        this.context = context;
-        this.movies = movies;
+    }
+
+    public MoviePosterAdapter(Context context, int parentWidth) {
+        this();
         this.inflater = LayoutInflater.from(context);
-
-        // configure Picasso with logging
-        Picasso.Builder builder = new Picasso.Builder(context);
-        // builder.loggingEnabled(true);
-        builder.listener((picasso, uri, exception) -> {
-            Log.e(LOG_LABEL, "Failed to load image from " + uri.toString());
-            exception.printStackTrace();
-        });
-
-        picasso = builder.build();
+        this.parentWidth = parentWidth;
     }
 
     @Override
@@ -81,23 +84,28 @@ public class  MoviePosterAdapter extends PagedListAdapter {
 
     @NonNull
     @Override
-    public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View convertView = inflater.inflate(R.layout.poster_grid_item, parent, false);
-        ViewHolder viewHolder = new ViewHolder((ImageView)convertView);
-        viewHolder.imageView = convertView.findViewById(R.id.poster_grid_item_image);
-        convertView.setTag(viewHolder);
+    public PosterViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+
+        ViewDataBinding binding = DataBindingUtil.inflate(inflater,
+                R.layout.poster_grid_item, parent, false);
+        binding.setVariable(BR.adapter, this);
+
+        PosterViewHolder holder = new PosterViewHolder(binding);
+
         // set minimum height relative to column width
-        int imageWidth = parent.getWidth() / NUM_COLUMNS;
-        viewHolder.imageView.setMinimumHeight((int)(ASPECT_RATIO * imageWidth));
-        return viewHolder;
+        int imageWidth = parentWidth / NUM_COLUMNS;
+        holder.itemView.setMinimumHeight((int) (ASPECT_RATIO * imageWidth));
+        holder.itemView.setMinimumWidth(imageWidth);
+
+        return holder;
     }
 
     @Override
-    public void onBindViewHolder(@NonNull RecyclerView.ViewHolder viewHolder, int position) {
+    public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
+        Log.d(LOG_LABEL, "onBindViewHolder for " + position);
         Movie movie = getItem(position);
-        ImageView imageView = ((ViewHolder)viewHolder).imageView;
-        picasso.load(movie.getPosterPath()).fit().into(imageView);
-        imageView.setContentDescription(movie.getTitle());
+        ((PosterViewHolder)holder).bind(movie);
+        holder.itemView.setTag(movie);
     }
 
     @Override
@@ -108,5 +116,28 @@ public class  MoviePosterAdapter extends PagedListAdapter {
         } else {
             return -1;
         }
+    }
+
+    @Override
+    public void submitList(PagedList pagedList) {
+        super.submitList(pagedList);
+        this.movies = pagedList;
+    }
+
+    @Override
+    public int getItemCount() {
+        int count = movies == null ? 0 : movies.size();
+        Log.d(LOG_LABEL, "getItemCount " + count);
+        return count;
+    }
+
+    @BindingAdapter({"bind:imageUrl"})
+    public static void loadImage(ImageView view, String imageUrl) {
+        Log.d(LOG_LABEL, "load image from " + imageUrl);
+
+        Picasso.with(view.getContext())
+                .load(imageUrl)
+                .fit()
+                .into(view);
     }
 }

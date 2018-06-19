@@ -9,8 +9,6 @@ import android.support.v4.app.FragmentManager;
 import android.support.v7.app.AppCompatActivity;
 
 import com.banderkat.trendingmovies.TrendingMoviesApp;
-import com.banderkat.trendingmovies.di.DaggerAppComponent;
-import com.banderkat.trendingmovies.di.Injectable;
 
 import dagger.android.AndroidInjection;
 import dagger.android.support.AndroidSupportInjection;
@@ -20,7 +18,6 @@ import dagger.android.support.HasSupportFragmentInjector;
  * Based on:
  * https://github.com/googlesamples/android-architecture-components/blob/178fe541643adb122d2a8925cf61a21950a4611c/GithubBrowserSample/app/src/main/java/com/android/example/github/di/AppInjector.java
  */
-
 public class AppInjector {
     private AppInjector() {}
     public static void init(TrendingMoviesApp app) {

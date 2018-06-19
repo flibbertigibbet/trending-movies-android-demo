@@ -10,6 +10,7 @@ import com.banderkat.trendingmovies.trendingmovies.BuildConfig;
 
 import javax.inject.Inject;
 
+import dagger.Module;
 import dagger.android.AndroidInjector;
 import dagger.android.DispatchingAndroidInjector;
 import dagger.android.HasActivityInjector;
@@ -19,11 +20,9 @@ import dagger.android.HasBroadcastReceiverInjector;
  * Based on:
  * https://github.com/googlesamples/android-architecture-components/blob/178fe541643adb122d2a8925cf61a21950a4611c/GithubBrowserSample/app/src/main/java/com/android/example/github/GithubApp.java
  */
-
-
 public class TrendingMoviesApp extends Application implements HasActivityInjector, HasBroadcastReceiverInjector {
 
-    private static final String LOG_LABEL = "GPGApp";
+    private static final String LOG_LABEL = "TrendingMoviesApp";
 
     @SuppressWarnings("WeakerAccess")
     @Inject
