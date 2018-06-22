@@ -14,10 +14,14 @@ import android.util.Log;
 /**
  * Based on:
  * https://developer.android.com/topic/libraries/architecture/guide.html
+ *
+ * Modified to support pagination.
  */
 public abstract class NetworkBoundResource<ResultType, RequestType> {
 
     private static final String LOG_LABEL = "NetworkBound";
+
+    public static final int FIRST_PAGE = 1;
 
     private final MediatorLiveData<Resource<ResultType>> result = new MediatorLiveData<>();
 
@@ -26,18 +30,17 @@ public abstract class NetworkBoundResource<ResultType, RequestType> {
     protected abstract void saveCallResult(@NonNull RequestType item);
 
     // Called with the data in the database to decide whether it should be
-    // fetched from the network.
-    @MainThread
-    protected abstract boolean shouldFetch(@Nullable ResultType data);
+    // fetched from the network. Returns next page ID.
+    protected abstract int pageToFetch(@Nullable ResultType data);
 
     // Called to get the cached data from the database
     @NonNull @MainThread
-    protected abstract LiveData<ResultType> loadFromDb();
+    protected abstract LiveData<ResultType> loadFromDb(int pageNumber);
 
     // Called to create the API call.
     @NonNull
     @MainThread
-    protected abstract LiveData<ApiResponse<RequestType>> createCall();
+    protected abstract LiveData<ApiResponse<RequestType>> createCall(int pageNumber);
 
     // Called when the fetch fails. The child class may want to reset components
     // like rate limiter.
@@ -48,13 +51,14 @@ public abstract class NetworkBoundResource<ResultType, RequestType> {
     }
 
     @MainThread
-    protected NetworkBoundResource() {
+    protected void setupSource() {
         result.setValue(Resource.loading(null));
-        LiveData<ResultType> dbSource = loadFromDb();
+        LiveData<ResultType> dbSource = loadFromDb(FIRST_PAGE);
         result.addSource(dbSource, data -> {
             result.removeSource(dbSource);
-            if (shouldFetch(data)) {
-                fetchFromNetwork(dbSource);
+            int pageNumber = pageToFetch(data);
+            if (pageNumber >= FIRST_PAGE) {
+                fetchFromNetwork(dbSource, pageNumber);
             } else {
                 //noinspection ConstantConditions
                 result.addSource(dbSource,
@@ -63,8 +67,8 @@ public abstract class NetworkBoundResource<ResultType, RequestType> {
         });
     }
 
-    private void fetchFromNetwork(final LiveData<ResultType> dbSource) {
-        LiveData<ApiResponse<RequestType>> apiResponse = createCall();
+    private void fetchFromNetwork(final LiveData<ResultType> dbSource, int pageNumber) {
+        LiveData<ApiResponse<RequestType>> apiResponse = createCall(pageNumber);
         // we re-attach dbSource as a new source,
         // it will dispatch its latest value quickly
         result.addSource(dbSource,
@@ -74,7 +78,7 @@ public abstract class NetworkBoundResource<ResultType, RequestType> {
             result.removeSource(dbSource);
             //noinspection ConstantConditions
             if (response.isSuccessful()) {
-                saveResultAndReInit(response);
+                saveResultAndReInit(response, pageNumber);
             } else {
                 onFetchFailed();
                 result.addSource(dbSource,
@@ -86,7 +90,7 @@ public abstract class NetworkBoundResource<ResultType, RequestType> {
 
     @SuppressLint("StaticFieldLeak")
     @MainThread
-    private void saveResultAndReInit(ApiResponse<RequestType> response) {
+    private void saveResultAndReInit(ApiResponse<RequestType> response, int pageNumber) {
         new AsyncTask<Void, Void, Void>() {
 
             @Override
@@ -106,7 +110,7 @@ public abstract class NetworkBoundResource<ResultType, RequestType> {
                 // otherwise we will get immediately last cached value,
                 // which may not be updated with latest results received from network.
                 //noinspection ConstantConditions
-                result.addSource(loadFromDb(),
+                result.addSource(loadFromDb(pageNumber),
                         newData -> result.setValue(Resource.success(newData)));
             }
         }.execute();

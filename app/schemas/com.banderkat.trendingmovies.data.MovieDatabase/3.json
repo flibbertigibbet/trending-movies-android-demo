@@ -1,0 +1,186 @@
+{
+  "formatVersion": 1,
+  "database": {
+    "version": 3,
+    "identityHash": "05d16462208dedbe1dd7a127077e9c75",
+    "entities": [
+      {
+        "tableName": "Movie",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER NOT NULL, `vote_count` INTEGER NOT NULL, `video` INTEGER NOT NULL, `vote_average` REAL NOT NULL, `title` TEXT, `popularity` REAL NOT NULL, `poster_path` TEXT, `original_language` TEXT, `original_title` TEXT, `release_date` TEXT, `backdrop_path` TEXT, `adult` INTEGER NOT NULL, `overview` TEXT, `timestamp` INTEGER NOT NULL, `popular_page` INTEGER NOT NULL, `popular_page_order` INTEGER NOT NULL, `top_rated_page` INTEGER NOT NULL, `top_rated_page_order` INTEGER NOT NULL, PRIMARY KEY(`id`))",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "voteCount",
+            "columnName": "vote_count",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "video",
+            "columnName": "video",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "voteAverage",
+            "columnName": "vote_average",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "title",
+            "columnName": "title",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "popularity",
+            "columnName": "popularity",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "posterPath",
+            "columnName": "poster_path",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "originalLanguage",
+            "columnName": "original_language",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "originalTitle",
+            "columnName": "original_title",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "releaseDate",
+            "columnName": "release_date",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "backdropPath",
+            "columnName": "backdrop_path",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "adult",
+            "columnName": "adult",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "overview",
+            "columnName": "overview",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "timestamp",
+            "columnName": "timestamp",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "popularPage",
+            "columnName": "popular_page",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "popularPageOrder",
+            "columnName": "popular_page_order",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "topRatedPage",
+            "columnName": "top_rated_page",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "topRatedPageOrder",
+            "columnName": "top_rated_page_order",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "columnNames": [
+            "id"
+          ],
+          "autoGenerate": false
+        },
+        "indices": [
+          {
+            "name": "index_Movie_popular_page_popular_page_order",
+            "unique": false,
+            "columnNames": [
+              "popular_page",
+              "popular_page_order"
+            ],
+            "createSql": "CREATE  INDEX `index_Movie_popular_page_popular_page_order` ON `${TABLE_NAME}` (`popular_page`, `popular_page_order`)"
+          },
+          {
+            "name": "index_Movie_top_rated_page_top_rated_page_order",
+            "unique": false,
+            "columnNames": [
+              "top_rated_page",
+              "top_rated_page_order"
+            ],
+            "createSql": "CREATE  INDEX `index_Movie_top_rated_page_top_rated_page_order` ON `${TABLE_NAME}` (`top_rated_page`, `top_rated_page_order`)"
+          },
+          {
+            "name": "index_Movie_popular_page",
+            "unique": false,
+            "columnNames": [
+              "popular_page"
+            ],
+            "createSql": "CREATE  INDEX `index_Movie_popular_page` ON `${TABLE_NAME}` (`popular_page`)"
+          },
+          {
+            "name": "index_Movie_popular_page_order",
+            "unique": false,
+            "columnNames": [
+              "popular_page_order"
+            ],
+            "createSql": "CREATE  INDEX `index_Movie_popular_page_order` ON `${TABLE_NAME}` (`popular_page_order`)"
+          },
+          {
+            "name": "index_Movie_top_rated_page",
+            "unique": false,
+            "columnNames": [
+              "top_rated_page"
+            ],
+            "createSql": "CREATE  INDEX `index_Movie_top_rated_page` ON `${TABLE_NAME}` (`top_rated_page`)"
+          },
+          {
+            "name": "index_Movie_top_rated_page_order",
+            "unique": false,
+            "columnNames": [
+              "top_rated_page_order"
+            ],
+            "createSql": "CREATE  INDEX `index_Movie_top_rated_page_order` ON `${TABLE_NAME}` (`top_rated_page_order`)"
+          }
+        ],
+        "foreignKeys": []
+      }
+    ],
+    "setupQueries": [
+      "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, \"05d16462208dedbe1dd7a127077e9c75\")"
+    ]
+  }
+}

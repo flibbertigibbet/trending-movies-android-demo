@@ -1,14 +1,11 @@
 package com.banderkat.trendingmovies.data;
 
 import android.arch.lifecycle.LiveData;
-import android.content.Context;
-import android.support.annotation.NonNull;
+import android.arch.paging.PagedList;
 
 import com.banderkat.trendingmovies.data.models.Movie;
 import com.banderkat.trendingmovies.data.networkresource.MovieNetworkBoundResource;
 import com.banderkat.trendingmovies.data.networkresource.Resource;
-
-import java.util.List;
 
 import javax.inject.Inject;
 
@@ -16,15 +13,17 @@ public class MovieRepository {
 
     private static final String LOG_LABEL = "MovieRepository";
 
-    private final MovieWebservice webservice;
-    private final MovieDao movieDao;
-    private final Context context;
+    public static final int PAGE_SIZE = 20;
+
+    public final MovieWebservice movieWebservice;
+    public final MovieDao movieDao;
+    public final String apiKey;
 
     @Inject
-    public MovieRepository(MovieWebservice webservice, MovieDao movieDao, Context context) {
-        this.webservice = webservice;
+    public MovieRepository(MovieWebservice movieWebservice, MovieDao movieDao, String apiKey) {
+        this.movieWebservice = movieWebservice;
         this.movieDao = movieDao;
-        this.context = context;
+        this.apiKey = apiKey;
     }
 
     public LiveData<Movie> getMovie(long movieId) {
@@ -32,13 +31,8 @@ public class MovieRepository {
         return movieDao.getMovie(movieId);
     }
 
-    public LiveData<Resource<List<Movie>>> loadMovies() {
-        return new MovieNetworkBoundResource(webservice, movieDao, context) {
-            @NonNull
-            @Override
-            protected LiveData<List<Movie>> loadFromDb() {
-                return movieDao.getPopularMovies();
-            }
-        }.getAsLiveData();
+    public LiveData<Resource<PagedList<Movie>>> loadMovies(boolean isMostPopular) {
+        return new MovieNetworkBoundResource(movieDao, movieWebservice, apiKey, isMostPopular)
+                .getAsLiveData();
     }
 }

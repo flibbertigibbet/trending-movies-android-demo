@@ -2,25 +2,35 @@ package com.banderkat.trendingmovies.data;
 
 import android.arch.lifecycle.LiveData;
 import android.arch.lifecycle.ViewModel;
+import android.arch.paging.PagedList;
+import android.util.Log;
 
 import com.banderkat.trendingmovies.data.models.Movie;
 import com.banderkat.trendingmovies.data.networkresource.Resource;
-
-import java.util.List;
+import com.banderkat.trendingmovies.trendingmovies.R;
 
 import javax.inject.Inject;
 
 public class MovieViewModel extends ViewModel {
-    protected final MovieRepository movieRepository;
-    private final LiveData<Resource<List<Movie>>> movies;
+
+    private static final String LOG_LABEL = "ViewModel";
+
+    public final MovieRepository movieRepository;
+    public final MovieDao movieDao;
 
     @Inject
-    MovieViewModel(MovieRepository movieRepository) {
+    public MovieViewModel(MovieRepository movieRepository, MovieDao movieDao) {
+        if (movieDao != null) {
+            Log.d(LOG_LABEL, "view model has DAO");
+        } else {
+            Log.d(LOG_LABEL, "view model has no DAO!");
+        }
+        this.movieDao = movieDao;
         this.movieRepository = movieRepository;
-        movies = movieRepository.loadMovies();
     }
 
-    public LiveData<Resource<List<Movie>>> loadMovies() {
-        return movies;
+    public LiveData<Resource<PagedList<Movie>>> loadMovies(boolean isMostPopular) {
+        Log.d(LOG_LABEL, "loading movies in view model. is most popular: " + isMostPopular);
+        return movieRepository.loadMovies(isMostPopular);
     }
 }

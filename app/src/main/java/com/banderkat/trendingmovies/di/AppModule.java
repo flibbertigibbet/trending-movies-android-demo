@@ -2,17 +2,19 @@ package com.banderkat.trendingmovies.di;
 
 import android.app.Application;
 import android.arch.persistence.room.Room;
-import android.content.Context;
+import android.util.Log;
 
 import com.banderkat.trendingmovies.data.MovieDao;
 import com.banderkat.trendingmovies.data.MovieDatabase;
 import com.banderkat.trendingmovies.data.MovieWebservice;
 import com.banderkat.trendingmovies.data.networkresource.LiveDataCallAdapterFactory;
+import com.banderkat.trendingmovies.trendingmovies.R;
 
 import javax.inject.Singleton;
 
 import dagger.Module;
 import dagger.Provides;
+import dagger.android.AndroidInjectionModule;
 import okhttp3.OkHttpClient;
 import okhttp3.logging.HttpLoggingInterceptor;
 import retrofit2.Retrofit;
@@ -24,13 +26,10 @@ import retrofit2.converter.gson.GsonConverterFactory;
  * Based on:
  * https://github.com/googlesamples/android-architecture-components/blob/e33782ba54ebe87f7e21e03542230695bc893818/GithubBrowserSample/app/src/main/java/com/android/example/github/di/AppModule.java
  */
-
-@Module(includes = ViewModelModule.class)
+@Module(includes = {ViewModelModule.class, AndroidInjectionModule.class})
 class AppModule {
 
     private static final String DATABASE_NAME = "banderkat-trending-movies";
-
-    // Data services
 
     @Singleton
     @Provides
@@ -65,12 +64,13 @@ class AppModule {
     @Singleton
     @Provides
     MovieDao provideMovieDao(MovieDatabase db) {
+        Log.d("AppModule", "provideMovieDao");
         return db.movieDao();
     }
 
     @Singleton
     @Provides
-    Context provideContext(Application app) {
-        return app.getApplicationContext();
+    String provideApiKey(Application app) {
+        return app.getApplicationContext().getString(R.string.api_key);
     }
 }
