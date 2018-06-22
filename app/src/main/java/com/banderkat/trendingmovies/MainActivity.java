@@ -6,6 +6,8 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 
 import com.banderkat.trendingmovies.data.MovieViewModel;
 import com.banderkat.trendingmovies.data.models.Movie;
@@ -27,8 +29,10 @@ public class MainActivity extends AppCompatActivity {
     MovieViewModel viewModel;
 
     RecyclerView recyclerView;
-
+    Menu menu;
     MoviePosterAdapter adapter;
+
+    private boolean sortByMostPopular = true;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -42,11 +46,6 @@ public class MainActivity extends AppCompatActivity {
 
         viewModel = ViewModelProviders.of(this, viewModelFactory)
                 .get(MovieViewModel.class);
-        if (viewModel == null) {
-            Log.d(LOG_LABEL, "No view model");
-        } else {
-            Log.d(LOG_LABEL, "Have view model");
-        }
 
         viewModel.loadMovies(false).observe(this, response -> {
             if (response == null || response.data == null) {
@@ -89,5 +88,32 @@ public class MainActivity extends AppCompatActivity {
             adapter.notifyDataSetChanged();
             recyclerView.requestLayout();
         });
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        item.setChecked(true);
+        switch (item.getItemId()) {
+            case R.id.action_sort_most_popular:
+                Log.d(LOG_LABEL, "sort most popular");
+                sortByMostPopular = true;
+                menu.getItem(1).setChecked(false);
+                return true;
+            case R.id.action_sort_top_rated:
+                Log.d(LOG_LABEL, "sort top rated");
+                sortByMostPopular = false;
+                menu.getItem(0).setChecked(false);
+                return true;
+            default:
+                Log.e(LOG_LABEL, "Unrecognized menu option " + item.getItemId());
+                return super.onOptionsItemSelected(item);
+        }
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.sort_menu, menu);
+        this.menu = menu;
+        return true;
     }
 }

@@ -14,6 +14,8 @@ import android.util.Log;
 /**
  * Based on:
  * https://developer.android.com/topic/libraries/architecture/guide.html
+ *
+ * Modified to support pagination.
  */
 public abstract class NetworkBoundResource<ResultType, RequestType> {
 

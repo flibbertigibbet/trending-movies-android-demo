@@ -97,13 +97,6 @@ public class MovieNetworkBoundResource extends NetworkBoundResource<PagedList<Mo
     protected LiveData<PagedList<Movie>> loadFromDb(int pageNumber) {
         DataSource.Factory<Integer, Movie> factory = movieDao.getPopularMovies(pageNumber);
 
-        if (factory != null) {
-            Log.d(LOG_LABEL, "Have factory");
-            DataSource<Integer, Movie> source = factory.create();
-        } else {
-            Log.e(LOG_LABEL, "No factory!");
-        }
-
         return new LivePagedListBuilder<>(movieDao.getPopularMovies(pageNumber), MovieRepository.PAGE_SIZE)
                 .setBoundaryCallback(new PagedList.BoundaryCallback<Movie>() {
 
