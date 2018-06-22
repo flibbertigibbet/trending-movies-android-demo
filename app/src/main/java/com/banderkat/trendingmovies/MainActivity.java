@@ -1,6 +1,8 @@
 package com.banderkat.trendingmovies;
 
+import android.arch.lifecycle.LiveData;
 import android.arch.lifecycle.ViewModelProviders;
+import android.arch.paging.PagedList;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.GridLayoutManager;
@@ -11,6 +13,7 @@ import android.view.MenuItem;
 
 import com.banderkat.trendingmovies.data.MovieViewModel;
 import com.banderkat.trendingmovies.data.models.Movie;
+import com.banderkat.trendingmovies.data.networkresource.Resource;
 import com.banderkat.trendingmovies.data.networkresource.Status;
 import com.banderkat.trendingmovies.di.MovieViewModelFactory;
 import com.banderkat.trendingmovies.trendingmovies.R;
@@ -34,6 +37,8 @@ public class MainActivity extends AppCompatActivity {
 
     private boolean sortByMostPopular = true;
 
+    private LiveData<Resource<PagedList<Movie>>> liveData;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -42,12 +47,19 @@ public class MainActivity extends AppCompatActivity {
         recyclerView = findViewById(R.id.main_activity_gridview);
         recyclerView.setLayoutManager(new GridLayoutManager(this, NUM_COLUMNS));
 
-        Log.d(LOG_LABEL, "Going to query for data");
-
         viewModel = ViewModelProviders.of(this, viewModelFactory)
                 .get(MovieViewModel.class);
 
-        viewModel.loadMovies(false).observe(this, response -> {
+        loadMovies();
+    }
+
+    private void loadMovies() {
+        Log.d(LOG_LABEL, "loadMovies. most popular? " + sortByMostPopular);
+        if (liveData != null) {
+            liveData.removeObservers(this);
+        }
+        liveData = viewModel.loadMovies(sortByMostPopular);
+        liveData.observe(this, response -> {
             if (response == null || response.data == null) {
                 if (response != null) {
                     if (response.status == Status.LOADING) {
@@ -67,7 +79,7 @@ public class MainActivity extends AppCompatActivity {
                 return;
             }
 
-            Log.d(LOG_LABEL, "Found " + response.data.size() + " movies!");
+            Log.d(LOG_LABEL, "Found " + response.data.size() + " movies");
 
             for (Movie movie: response.data) {
                 Log.d(LOG_LABEL, "Movie: " + movie.toString());
@@ -80,13 +92,15 @@ public class MainActivity extends AppCompatActivity {
                 adapter.submitList(response.data);
                 recyclerView.setAdapter(adapter);
             } else {
-                Log.d(LOG_LABEL, "submit list for diff");
+                Log.d(LOG_LABEL, "swap adapters");
                 // Let the AsyncListDiffer find which have changed, and only update their view holders
                 // https://developer.android.com/reference/android/support/v7/recyclerview/extensions/ListAdapter
-                adapter.submitList(response.data);
+                MoviePosterAdapter newAdapter = adapter = new MoviePosterAdapter(this, recyclerView.getMeasuredWidth());;
+                newAdapter.submitList(response.data);
+                recyclerView.swapAdapter(newAdapter, true);
+                adapter = newAdapter;
             }
             adapter.notifyDataSetChanged();
-            recyclerView.requestLayout();
         });
     }
 
@@ -98,16 +112,19 @@ public class MainActivity extends AppCompatActivity {
                 Log.d(LOG_LABEL, "sort most popular");
                 sortByMostPopular = true;
                 menu.getItem(1).setChecked(false);
-                return true;
+                break;
             case R.id.action_sort_top_rated:
                 Log.d(LOG_LABEL, "sort top rated");
                 sortByMostPopular = false;
                 menu.getItem(0).setChecked(false);
-                return true;
+                break;
             default:
                 Log.e(LOG_LABEL, "Unrecognized menu option " + item.getItemId());
                 return super.onOptionsItemSelected(item);
         }
+
+        loadMovies();
+        return true;
     }
 
     @Override

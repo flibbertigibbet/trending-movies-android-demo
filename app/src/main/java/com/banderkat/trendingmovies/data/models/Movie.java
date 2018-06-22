@@ -12,7 +12,7 @@ import java.util.Objects;
 
 @Entity(indices = {
         @Index(value={"popular_page", "popular_page_order"}),
-        @Index(value={"trending_page", "trending_page_order"})
+        @Index(value={"top_rated_page", "top_rated_page_order"})
 })
 public class Movie {
 
@@ -64,15 +64,15 @@ public class Movie {
     // timestamp is not final, as it is set on database save, and not by serializer
     private long timestamp;
 
-    // track if movie was from the popular or trending endpoint, and where
+    // track if movie was from the popular or top rated endpoint, and where
     @ColumnInfo(name = "popular_page", index = true)
     private long popularPage;
     @ColumnInfo(name = "popular_page_order", index = true)
     private long popularPageOrder;
-    @ColumnInfo(name = "trending_page", index = true)
-    private long trendingPage;
-    @ColumnInfo(name = "trending_page_order", index = true)
-    private long trendingPageOrder;
+    @ColumnInfo(name = "top_rated_page", index = true)
+    private long topRatedPage;
+    @ColumnInfo(name = "top_rated_page_order", index = true)
+    private long topRatedPageOrder;
 
     public Movie(long id, long voteCount, boolean video, float voteAverage, String title,
                  float popularity, String posterPath, String originalLanguage, String originalTitle,
@@ -95,8 +95,8 @@ public class Movie {
         // flag -1 to indicate not seen yet
         popularPage = -1;
         popularPageOrder = -1;
-        trendingPage = -1;
-        trendingPageOrder = -1;
+        topRatedPage = -1;
+        topRatedPageOrder = -1;
     }
 
     @Override
@@ -124,12 +124,12 @@ public class Movie {
         this.popularPageOrder = popularPageOrder;
     }
 
-    public void setTrendingPage(long trendingPage) {
-        this.trendingPage = trendingPage;
+    public void setTopRatedPage(long topRatedPage) {
+        this.topRatedPage = topRatedPage;
     }
 
-    public void setTrendingPageOrder(long trendingPageOrder) {
-        this.trendingPageOrder = trendingPageOrder;
+    public void setTopRatedPageOrder(long topRatedPageOrder) {
+        this.topRatedPageOrder = topRatedPageOrder;
     }
 
     // Getters
@@ -198,12 +198,12 @@ public class Movie {
         return popularPageOrder;
     }
 
-    public long getTrendingPage() {
-        return trendingPage;
+    public long getTopRatedPage() {
+        return topRatedPage;
     }
 
-    public long getTrendingPageOrder() {
-        return trendingPageOrder;
+    public long getTopRatedPageOrder() {
+        return topRatedPageOrder;
     }
 
     @Override
@@ -219,8 +219,8 @@ public class Movie {
                 timestamp == movie.timestamp &&
                 popularPage == movie.popularPage &&
                 popularPageOrder == movie.popularPageOrder &&
-                trendingPage == movie.trendingPage &&
-                trendingPageOrder == movie.trendingPageOrder &&
+                topRatedPage == movie.topRatedPage &&
+                topRatedPageOrder == movie.topRatedPageOrder &&
                 Objects.equals(title, movie.title) &&
                 Objects.equals(posterPath, movie.posterPath) &&
                 Objects.equals(originalLanguage, movie.originalLanguage) &&
@@ -232,6 +232,6 @@ public class Movie {
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, voteCount, video, voteAverage, title, popularity, posterPath, originalLanguage, originalTitle, releaseDate, backdropPath, adult, overview, timestamp, popularPage, popularPageOrder, trendingPage, trendingPageOrder);
+        return Objects.hash(id, voteCount, video, voteAverage, title, popularity, posterPath, originalLanguage, originalTitle, releaseDate, backdropPath, adult, overview, timestamp, popularPage, popularPageOrder, topRatedPage, topRatedPageOrder);
     }
 }

@@ -21,4 +21,8 @@ public interface MovieWebservice {
     LiveData<ApiResponse<MovieQueryResponse>> getPopularMovies(@Query("api_key") String api_key,
                                                                @Query("page") Long page);
 
+    @GET("movie/top_rated")
+    LiveData<ApiResponse<MovieQueryResponse>> getTopRatedMovies(@Query("api_key") String api_key,
+                                                                @Query("page") Long page);
+
 }

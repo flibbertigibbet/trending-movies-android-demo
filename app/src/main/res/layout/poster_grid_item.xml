@@ -15,7 +15,7 @@
         android:layout_height="wrap_content"
         android:padding="0dp"
         android:scaleType="fitCenter"
-        android:background="@color/lightTealColor"
+        android:background="@color/primaryDarkColor"
         app:imageUrl="@{movie.posterPath}"
         android:contentDescription="@{movie.title}" />
 </layout>

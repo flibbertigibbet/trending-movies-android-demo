@@ -102,7 +102,6 @@ public class  MoviePosterAdapter extends PagedListAdapter {
 
     @Override
     public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
-        Log.d(LOG_LABEL, "onBindViewHolder for " + position);
         Movie movie = getItem(position);
         ((PosterViewHolder)holder).bind(movie);
         holder.itemView.setTag(movie);
@@ -126,15 +125,11 @@ public class  MoviePosterAdapter extends PagedListAdapter {
 
     @Override
     public int getItemCount() {
-        int count = movies == null ? 0 : movies.size();
-        Log.d(LOG_LABEL, "getItemCount " + count);
-        return count;
+        return movies == null ? 0 : movies.size();
     }
 
     @BindingAdapter({"bind:imageUrl"})
     public static void loadImage(ImageView view, String imageUrl) {
-        Log.d(LOG_LABEL, "load image from " + imageUrl);
-
         Picasso.with(view.getContext())
                 .load(imageUrl)
                 .fit()

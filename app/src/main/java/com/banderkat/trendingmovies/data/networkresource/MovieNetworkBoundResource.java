@@ -4,8 +4,6 @@ import android.arch.lifecycle.LiveData;
 import android.arch.paging.DataSource;
 import android.arch.paging.LivePagedListBuilder;
 import android.arch.paging.PagedList;
-import android.os.AsyncTask;
-import android.support.annotation.MainThread;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Log;
@@ -25,21 +23,21 @@ public class MovieNetworkBoundResource extends NetworkBoundResource<PagedList<Mo
     private static final String LOG_LABEL = "MovieNetworkResource";
 
     // maximum rate at which to refresh data from network
-    private static final long RATE_LIMIT = TimeUnit.MINUTES.toMillis(15);
+    private static final long RATE_LIMIT = TimeUnit.HOURS.toMillis(1);
 
     public String apiKey;
 
-    // if true, query is for trending, if false, query is for most popular
-    private boolean isTrending;
+    private boolean isMostPopular;
 
     public MovieDao movieDao;
     public MovieWebservice movieWebservice;
 
-    public MovieNetworkBoundResource(MovieDao movieDao, MovieWebservice movieWebservice, String apiKey) {
+    public MovieNetworkBoundResource(MovieDao movieDao, MovieWebservice movieWebservice, String apiKey, boolean isMostPopular) {
         super();
         this.movieDao = movieDao;
         this.movieWebservice = movieWebservice;
         this.apiKey = apiKey;
+        this.isMostPopular = isMostPopular;
 
         setupSource();
     }
@@ -55,16 +53,15 @@ public class MovieNetworkBoundResource extends NetworkBoundResource<PagedList<Mo
         List<Movie> movies = item.getResults();
         for (int i = 0; i < movies.size(); i++) {
             Movie movie = movies.get(i);
-            if (movie.isAdult()) continue;
             movie.setTimestamp(timestamp);
 
             // track pagination and order from the results on each movie
-            if (isTrending) {
-                movie.setTrendingPage(pageNum);
-                movie.setTrendingPageOrder(i);
-            } else {
+            if (isMostPopular) {
                 movie.setPopularPage(pageNum);
                 movie.setPopularPageOrder(i);
+            } else {
+                movie.setTopRatedPage(pageNum);
+                movie.setTopRatedPageOrder(i);
             }
             movieDao.save(movie);
         }
@@ -77,17 +74,21 @@ public class MovieNetworkBoundResource extends NetworkBoundResource<PagedList<Mo
         }
 
         Movie first = data.get(0);
-        long pageNum = isTrending ? first.getTrendingPage() : first.getPopularPage();
+        long pageNum = isMostPopular ? first.getPopularPage() : first.getTopRatedPage();
         pageNum++;
         if (pageNum < FIRST_PAGE) {
             pageNum = FIRST_PAGE;
         }
-        boolean expired = System.currentTimeMillis() - first.getTimestamp() > RATE_LIMIT;
+        boolean expired = (System.currentTimeMillis() - first.getTimestamp()) > RATE_LIMIT;
         if (expired) {
-
+            Log.d(LOG_LABEL, "Clearing cache in database");
+            Log.d(LOG_LABEL, "last timestamp: " + first.getTimestamp());
+            Log.d(LOG_LABEL, "current timestamp: " + System.currentTimeMillis());
+            Log.d(LOG_LABEL, "rate limit: " + RATE_LIMIT);
             movieDao.clear(); // throw out the full cache
             return (int)pageNum;
         } else {
+            Log.d(LOG_LABEL, "Use database cache");
             return -1; // flag to not fetch
         }
     }
@@ -95,15 +96,28 @@ public class MovieNetworkBoundResource extends NetworkBoundResource<PagedList<Mo
     @NonNull
     @Override
     protected LiveData<PagedList<Movie>> loadFromDb(int pageNumber) {
-        DataSource.Factory<Integer, Movie> factory = movieDao.getPopularMovies(pageNumber);
 
-        return new LivePagedListBuilder<>(movieDao.getPopularMovies(pageNumber), MovieRepository.PAGE_SIZE)
+        DataSource.Factory<Integer, Movie> factory;
+        if (isMostPopular) {
+            Log.d(LOG_LABEL, "Factory for popular movies");
+            factory = movieDao.getPopularMovies(pageNumber);
+        } else {
+            Log.d(LOG_LABEL, "Factory for top rated movies");
+            factory = movieDao.getTopRatedMovies(pageNumber);
+        }
+
+        return new LivePagedListBuilder<>(factory, MovieRepository.PAGE_SIZE)
                 .setBoundaryCallback(new PagedList.BoundaryCallback<Movie>() {
 
             @Override
             public void onZeroItemsLoaded() {
                 super.onZeroItemsLoaded();
-                movieDao.getPopularMovies(pageNumber);
+                if (isMostPopular) {
+                    movieDao.getPopularMovies(pageNumber);
+                } else {
+                    movieDao.getTopRatedMovies(pageNumber);
+                }
+
             }
 
             @Override
@@ -114,7 +128,12 @@ public class MovieNetworkBoundResource extends NetworkBoundResource<PagedList<Mo
             @Override
             public void onItemAtEndLoaded(@NonNull Movie itemAtEnd) {
                 super.onItemAtEndLoaded(itemAtEnd);
-                movieDao.getPopularMovies(pageNumber);
+                if (isMostPopular) {
+                    movieDao.getPopularMovies(pageNumber);
+                } else {
+                    movieDao.getTopRatedMovies(pageNumber);
+                }
+
             }
         }).setInitialLoadKey(1).build();
     }
@@ -122,10 +141,11 @@ public class MovieNetworkBoundResource extends NetworkBoundResource<PagedList<Mo
     @NonNull
     @Override
     protected LiveData<ApiResponse<MovieQueryResponse>> createCall(int pageNum) {
-        return movieWebservice.getPopularMovies(apiKey, (long)pageNum);
-    }
+        if (isMostPopular) {
+            return movieWebservice.getPopularMovies(apiKey, (long)pageNum);
+        } else {
+            return movieWebservice.getTopRatedMovies(apiKey, (long)pageNum);
+        }
 
-    public void setIsTrending(boolean isTrending) {
-        this.isTrending = isTrending;
     }
 }
