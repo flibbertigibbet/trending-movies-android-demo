@@ -33,4 +33,9 @@ public class MovieViewModel extends ViewModel {
         Log.d(LOG_LABEL, "loading movies in view model. is most popular: " + isMostPopular);
         return movieRepository.loadMovies(isMostPopular);
     }
+
+    public LiveData<Movie> getMovie(long movieId) {
+        Log.d(LOG_LABEL, "getting move in view model: " + movieId);
+        return movieRepository.getMovie(movieId);
+    }
 }

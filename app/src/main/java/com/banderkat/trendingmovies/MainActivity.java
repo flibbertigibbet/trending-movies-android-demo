@@ -3,6 +3,7 @@ package com.banderkat.trendingmovies;
 import android.arch.lifecycle.LiveData;
 import android.arch.lifecycle.ViewModelProviders;
 import android.arch.paging.PagedList;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.GridLayoutManager;
@@ -17,10 +18,14 @@ import com.banderkat.trendingmovies.data.networkresource.Resource;
 import com.banderkat.trendingmovies.data.networkresource.Status;
 import com.banderkat.trendingmovies.di.MovieViewModelFactory;
 import com.banderkat.trendingmovies.trendingmovies.R;
+import com.squareup.picasso.Picasso;
 
 import javax.inject.Inject;
 
-public class MainActivity extends AppCompatActivity {
+import static com.banderkat.trendingmovies.MovieDetailActivity.MOVIE_ID_DETAIL_KEY;
+import static com.banderkat.trendingmovies.MoviePosterAdapter.POSTER_PICASSO_GROUP;
+
+public class MainActivity extends AppCompatActivity implements MoviePosterAdapter.MoviePosterClickListener {
 
     private  static final String LOG_LABEL = "MainActivity";
     public static final int NUM_COLUMNS = 2;
@@ -46,6 +51,19 @@ public class MainActivity extends AppCompatActivity {
 
         recyclerView = findViewById(R.id.main_activity_gridview);
         recyclerView.setLayoutManager(new GridLayoutManager(this, NUM_COLUMNS));
+
+        recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
+            @Override
+            public void onScrollStateChanged(RecyclerView recyclerView, int scrollState) {
+                final Picasso picasso = Picasso.with(MainActivity.this);
+                if (scrollState == RecyclerView.SCROLL_STATE_IDLE ||
+                        scrollState == RecyclerView.SCROLL_STATE_DRAGGING) {
+                    picasso.resumeTag(POSTER_PICASSO_GROUP);
+                } else {
+                    picasso.pauseTag(POSTER_PICASSO_GROUP);
+                }
+            }
+        });
 
         viewModel = ViewModelProviders.of(this, viewModelFactory)
                 .get(MovieViewModel.class);
@@ -87,15 +105,13 @@ public class MainActivity extends AppCompatActivity {
 
             // Reset list adapter if either it isn't set up, or if a filter was applied/removed.
             if (adapter == null || response.data.size() != adapter.getItemCount()) {
-                adapter = new MoviePosterAdapter(this, recyclerView.getMeasuredWidth());
+                adapter = new MoviePosterAdapter(this, recyclerView.getMeasuredWidth(), this);
                 // must set the list before the adapter for the differ to initialize properly
                 adapter.submitList(response.data);
                 recyclerView.setAdapter(adapter);
             } else {
                 Log.d(LOG_LABEL, "swap adapters");
-                // Let the AsyncListDiffer find which have changed, and only update their view holders
-                // https://developer.android.com/reference/android/support/v7/recyclerview/extensions/ListAdapter
-                MoviePosterAdapter newAdapter = adapter = new MoviePosterAdapter(this, recyclerView.getMeasuredWidth());;
+                MoviePosterAdapter newAdapter = adapter = new MoviePosterAdapter(this, recyclerView.getMeasuredWidth(), this);;
                 newAdapter.submitList(response.data);
                 recyclerView.swapAdapter(newAdapter, true);
                 adapter = newAdapter;
@@ -132,5 +148,13 @@ public class MainActivity extends AppCompatActivity {
         getMenuInflater().inflate(R.menu.sort_menu, menu);
         this.menu = menu;
         return true;
+    }
+
+    @Override
+    public void onItemClick(long movieId) {
+        Log.d(LOG_LABEL, "in callback for selected movie ID " + movieId);
+        Intent intent = new Intent(this, MovieDetailActivity.class);
+        intent.putExtra(MOVIE_ID_DETAIL_KEY, movieId);
+        startActivity(intent);
     }
 }

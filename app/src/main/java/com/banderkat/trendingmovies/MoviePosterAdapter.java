@@ -26,11 +26,18 @@ import static com.banderkat.trendingmovies.MainActivity.NUM_COLUMNS;
 
 public class  MoviePosterAdapter extends PagedListAdapter {
 
-    private static final String LOG_LABEL = "PosterAdapter";
+    public interface MoviePosterClickListener {
+        void onItemClick(long movieId);
+    }
 
+    public static final String POSTER_PICASSO_GROUP = "movie_posters";
+
+    private final MoviePosterClickListener listener;
+
+    private static final String LOG_LABEL = "PosterAdapter";
     private LayoutInflater inflater;
 
-    private static final double ASPECT_RATIO = 1.5;
+    public static final double ASPECT_RATIO = 1.5;
 
     private PagedList<Movie> movies;
     private int parentWidth;
@@ -51,7 +58,7 @@ public class  MoviePosterAdapter extends PagedListAdapter {
         }
     }
 
-    public MoviePosterAdapter() {
+    private MoviePosterAdapter(MoviePosterClickListener listener) {
         super(new DiffUtil.ItemCallback<Movie>() {
             @Override
             public boolean areItemsTheSame(Movie oldItem, Movie newItem) {
@@ -69,10 +76,12 @@ public class  MoviePosterAdapter extends PagedListAdapter {
                 return Objects.equals(oldItem, newItem);
             }
         });
+
+        this.listener = listener;
     }
 
-    public MoviePosterAdapter(Context context, int parentWidth) {
-        this();
+    public MoviePosterAdapter(Context context, int parentWidth, MoviePosterClickListener listener) {
+        this(listener);
         this.inflater = LayoutInflater.from(context);
         this.parentWidth = parentWidth;
     }
@@ -105,6 +114,15 @@ public class  MoviePosterAdapter extends PagedListAdapter {
         Movie movie = getItem(position);
         ((PosterViewHolder)holder).bind(movie);
         holder.itemView.setTag(movie);
+
+        holder.itemView.setOnClickListener(v -> {
+            if (movie != null) {
+                Log.d(LOG_LABEL, "selected movie " + movie.getTitle());
+                listener.onItemClick(movie.getId());
+            } else {
+                Log.e(LOG_LABEL, "have no movie in view holder bind");
+            }
+        });
     }
 
     @Override
@@ -132,6 +150,7 @@ public class  MoviePosterAdapter extends PagedListAdapter {
     public static void loadImage(ImageView view, String imageUrl) {
         Picasso.with(view.getContext())
                 .load(imageUrl)
+                .tag(POSTER_PICASSO_GROUP)
                 .fit()
                 .into(view);
     }
