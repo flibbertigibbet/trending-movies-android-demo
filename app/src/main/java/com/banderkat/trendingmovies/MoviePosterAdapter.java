@@ -26,6 +26,12 @@ import static com.banderkat.trendingmovies.MainActivity.NUM_COLUMNS;
 
 public class  MoviePosterAdapter extends PagedListAdapter {
 
+    public interface MoviePosterClickListener {
+        void onItemClick(long movieId);
+    }
+
+    private final MoviePosterClickListener listener;
+
     private static final String LOG_LABEL = "PosterAdapter";
 
     private LayoutInflater inflater;
@@ -51,7 +57,7 @@ public class  MoviePosterAdapter extends PagedListAdapter {
         }
     }
 
-    public MoviePosterAdapter() {
+    private MoviePosterAdapter(MoviePosterClickListener listener) {
         super(new DiffUtil.ItemCallback<Movie>() {
             @Override
             public boolean areItemsTheSame(Movie oldItem, Movie newItem) {
@@ -69,10 +75,12 @@ public class  MoviePosterAdapter extends PagedListAdapter {
                 return Objects.equals(oldItem, newItem);
             }
         });
+
+        this.listener = listener;
     }
 
-    public MoviePosterAdapter(Context context, int parentWidth) {
-        this();
+    public MoviePosterAdapter(Context context, int parentWidth, MoviePosterClickListener listener) {
+        this(listener);
         this.inflater = LayoutInflater.from(context);
         this.parentWidth = parentWidth;
     }
@@ -105,6 +113,15 @@ public class  MoviePosterAdapter extends PagedListAdapter {
         Movie movie = getItem(position);
         ((PosterViewHolder)holder).bind(movie);
         holder.itemView.setTag(movie);
+
+        holder.itemView.setOnClickListener(v -> {
+            if (movie != null) {
+                Log.d(LOG_LABEL, "selected movie " + movie.getTitle());
+                listener.onItemClick(movie.getId());
+            } else {
+                Log.e(LOG_LABEL, "have no movie in view holder bind");
+            }
+        });
     }
 
     @Override
