@@ -19,7 +19,6 @@ import com.squareup.picasso.Picasso;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.Calendar;
 import java.util.Date;
 
 import javax.inject.Inject;
@@ -36,10 +35,11 @@ public class MovieDetailActivity extends AppCompatActivity {
     public static final String MOVIE_ID_DETAIL_KEY = "movie_id";
 
     private static final String LOG_LABEL = "MovieDetail";
-    private static final DateFormat releaseDateFormat;
+    private static final DateFormat releaseDateFormat, displayFormat;
 
     static {
         releaseDateFormat = new SimpleDateFormat("y-M-d", US);
+        displayFormat = new SimpleDateFormat("MMMM d, y", US);
     }
 
     private long movieId;
@@ -100,16 +100,14 @@ public class MovieDetailActivity extends AppCompatActivity {
         });
     }
 
-    public String getReleaseYear() {
+    public String getReleaseDisplayDate() {
         if (movie == null) {
             return "";
         }
 
         try {
             Date releaseDate = releaseDateFormat.parse(movie.getReleaseDate());
-            Calendar calendar = Calendar.getInstance();
-            calendar.setTime(releaseDate);
-            return String.valueOf(calendar.get(Calendar.YEAR));
+            return displayFormat.format(releaseDate);
         } catch (ParseException e) {
             Log.e(LOG_LABEL, "Could not parse release year");
             e.printStackTrace();
