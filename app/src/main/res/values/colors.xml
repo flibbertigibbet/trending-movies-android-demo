@@ -3,12 +3,15 @@
     <!-- https://material.io/tools/color/#!/?view.left=0&view.right=0&primary.color=212121 -->
     <color name="primaryColor">#212121</color>
     <color name="primaryLightColor">#484848</color>
-    <color name="primaryDarkColor">#000000</color>
-    <color name="primaryTextColor">#ffffff</color>
+    <color name="primaryDarkColor">@color/black</color>
+    <color name="primaryTextColor">@color/white</color>
 
     <!-- https://material.io/tools/color/#!/?view.left=0&view.right=0&primary.color=26A69A -->
     <color name="lightTealColor">#63d7cb</color>
     <color name="darkTealColor">#25a59a</color>
 
-    <color name="secondaryTextColor">#000000</color>
+    <color name="secondaryTextColor">@color/black</color>
+
+    <color name="white">#ffffff</color>
+    <color name="black">#000000</color>
 </resources>

@@ -75,7 +75,6 @@ public class MovieNetworkBoundResource extends NetworkBoundResource<PagedList<Mo
 
         Movie first = data.get(0);
         long pageNum = isMostPopular ? first.getPopularPage() : first.getTopRatedPage();
-        pageNum++;
         if (pageNum < FIRST_PAGE) {
             pageNum = FIRST_PAGE;
         }

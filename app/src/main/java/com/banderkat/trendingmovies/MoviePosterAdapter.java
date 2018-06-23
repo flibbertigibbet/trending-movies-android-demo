@@ -37,7 +37,7 @@ public class  MoviePosterAdapter extends PagedListAdapter {
     private static final String LOG_LABEL = "PosterAdapter";
     private LayoutInflater inflater;
 
-    private static final double ASPECT_RATIO = 1.5;
+    public static final double ASPECT_RATIO = 1.5;
 
     private PagedList<Movie> movies;
     private int parentWidth;

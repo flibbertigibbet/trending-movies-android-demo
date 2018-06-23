@@ -2,8 +2,10 @@ package com.banderkat.trendingmovies;
 
 import android.arch.lifecycle.ViewModelProviders;
 import android.content.Intent;
+import android.databinding.DataBindingUtil;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 
@@ -11,8 +13,18 @@ import com.banderkat.trendingmovies.data.MovieViewModel;
 import com.banderkat.trendingmovies.data.models.Movie;
 import com.banderkat.trendingmovies.di.MovieViewModelFactory;
 import com.banderkat.trendingmovies.trendingmovies.R;
+import com.banderkat.trendingmovies.trendingmovies.databinding.ActivityMovieDetailBinding;
+import com.squareup.picasso.Picasso;
+
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
 
 import javax.inject.Inject;
+
+import static java.util.Locale.US;
 
 public class MovieDetailActivity extends AppCompatActivity {
     @SuppressWarnings("WeakerAccess")
@@ -21,12 +33,18 @@ public class MovieDetailActivity extends AppCompatActivity {
     @SuppressWarnings("WeakerAccess")
     MovieViewModel viewModel;
 
-    private static final String LOG_LABEL = "MovieDetail";
-
     public static final String MOVIE_ID_DETAIL_KEY = "movie_id";
+
+    private static final String LOG_LABEL = "MovieDetail";
+    private static final DateFormat releaseDateFormat;
+
+    static {
+        releaseDateFormat = new SimpleDateFormat("y-M-d", US);
+    }
 
     private long movieId;
     private Movie movie;
+    private ActivityMovieDetailBinding binding;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -59,7 +77,44 @@ public class MovieDetailActivity extends AppCompatActivity {
 
             Log.d(LOG_LABEL, "Loaded data for movie " + movie.getTitle());
             this.movie = movie;
-            // TODO: set up data binding
+
+            binding = DataBindingUtil.setContentView(this, R.layout.activity_movie_detail);
+            binding.setMovie(movie);
+            binding.setActivity(this);
+
+            ActionBar actionBar = getSupportActionBar();
+
+            if (actionBar == null) {
+                Log.e(LOG_LABEL, "could not find detail action bar");
+                return;
+            }
+
+            actionBar.setTitle(movie.getTitle());
+            actionBar.setDisplayHomeAsUpEnabled(true);
+
+            Picasso.with(this)
+                    .load(movie.getPosterPath())
+                    .placeholder(R.drawable.ic_image_placeholder_white_185x277dp)
+                    .fit()
+                    .into(binding.movieDetailPoster);
         });
+    }
+
+    public String getReleaseYear() {
+        if (movie == null) {
+            return "";
+        }
+
+        try {
+            Date releaseDate = releaseDateFormat.parse(movie.getReleaseDate());
+            Calendar calendar = Calendar.getInstance();
+            calendar.setTime(releaseDate);
+            return String.valueOf(calendar.get(Calendar.YEAR));
+        } catch (ParseException e) {
+            Log.e(LOG_LABEL, "Could not parse release year");
+            e.printStackTrace();
+        }
+
+        return "";
     }
 }
