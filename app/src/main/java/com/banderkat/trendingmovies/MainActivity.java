@@ -21,6 +21,8 @@ import com.banderkat.trendingmovies.trendingmovies.R;
 
 import javax.inject.Inject;
 
+import static com.banderkat.trendingmovies.MovieDetailActivity.MOVIE_ID_DETAIL_KEY;
+
 public class MainActivity extends AppCompatActivity implements MoviePosterAdapter.MoviePosterClickListener {
 
     private  static final String LOG_LABEL = "MainActivity";
@@ -137,6 +139,7 @@ public class MainActivity extends AppCompatActivity implements MoviePosterAdapte
     public void onItemClick(long movieId) {
         Log.d(LOG_LABEL, "in callback for selected movie ID " + movieId);
         Intent intent = new Intent(this, MovieDetailActivity.class);
+        intent.putExtra(MOVIE_ID_DETAIL_KEY, movieId);
         startActivity(intent);
     }
 }
