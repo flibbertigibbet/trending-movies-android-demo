@@ -30,10 +30,11 @@ public class  MoviePosterAdapter extends PagedListAdapter {
         void onItemClick(long movieId);
     }
 
+    public static final String POSTER_PICASSO_GROUP = "movie_posters";
+
     private final MoviePosterClickListener listener;
 
     private static final String LOG_LABEL = "PosterAdapter";
-
     private LayoutInflater inflater;
 
     private static final double ASPECT_RATIO = 1.5;
@@ -149,6 +150,7 @@ public class  MoviePosterAdapter extends PagedListAdapter {
     public static void loadImage(ImageView view, String imageUrl) {
         Picasso.with(view.getContext())
                 .load(imageUrl)
+                .tag(POSTER_PICASSO_GROUP)
                 .fit()
                 .into(view);
     }

@@ -18,10 +18,12 @@ import com.banderkat.trendingmovies.data.networkresource.Resource;
 import com.banderkat.trendingmovies.data.networkresource.Status;
 import com.banderkat.trendingmovies.di.MovieViewModelFactory;
 import com.banderkat.trendingmovies.trendingmovies.R;
+import com.squareup.picasso.Picasso;
 
 import javax.inject.Inject;
 
 import static com.banderkat.trendingmovies.MovieDetailActivity.MOVIE_ID_DETAIL_KEY;
+import static com.banderkat.trendingmovies.MoviePosterAdapter.POSTER_PICASSO_GROUP;
 
 public class MainActivity extends AppCompatActivity implements MoviePosterAdapter.MoviePosterClickListener {
 
@@ -49,6 +51,19 @@ public class MainActivity extends AppCompatActivity implements MoviePosterAdapte
 
         recyclerView = findViewById(R.id.main_activity_gridview);
         recyclerView.setLayoutManager(new GridLayoutManager(this, NUM_COLUMNS));
+
+        recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
+            @Override
+            public void onScrollStateChanged(RecyclerView recyclerView, int scrollState) {
+                final Picasso picasso = Picasso.with(MainActivity.this);
+                if (scrollState == RecyclerView.SCROLL_STATE_IDLE ||
+                        scrollState == RecyclerView.SCROLL_STATE_DRAGGING) {
+                    picasso.resumeTag(POSTER_PICASSO_GROUP);
+                } else {
+                    picasso.pauseTag(POSTER_PICASSO_GROUP);
+                }
+            }
+        });
 
         viewModel = ViewModelProviders.of(this, viewModelFactory)
                 .get(MovieViewModel.class);
