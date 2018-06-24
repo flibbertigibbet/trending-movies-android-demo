@@ -9,7 +9,6 @@ import android.arch.persistence.room.Query;
 import android.arch.persistence.room.Transaction;
 import android.arch.persistence.room.Update;
 import android.os.AsyncTask;
-import android.support.annotation.TransitionRes;
 
 import com.banderkat.trendingmovies.data.models.MovieVideo;
 
