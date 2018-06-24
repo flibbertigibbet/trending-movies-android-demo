@@ -74,6 +74,9 @@ public class Movie {
     @ColumnInfo(name = "top_rated_page_order", index = true)
     private long topRatedPageOrder;
 
+    @ColumnInfo(name = "got_videos")
+    private boolean gotVideos;
+
     public Movie(long id, long voteCount, boolean video, float voteAverage, String title,
                  float popularity, String posterPath, String originalLanguage, String originalTitle,
                  String backdropPath, boolean adult, String overview, String releaseDate) {
@@ -97,6 +100,8 @@ public class Movie {
         popularPageOrder = -1;
         topRatedPage = -1;
         topRatedPageOrder = -1;
+
+        this.gotVideos = false; // flag true once related videos queried and saved
     }
 
     @Override
@@ -132,7 +137,15 @@ public class Movie {
         this.topRatedPageOrder = topRatedPageOrder;
     }
 
+    public void setGotVideos(boolean gotVideos) {
+        this.gotVideos = gotVideos;
+    }
+
     // Getters
+
+    public boolean gotVideos() {
+        return gotVideos;
+    }
 
     public long getTimestamp() {
         return timestamp;

@@ -6,8 +6,12 @@ import android.arch.paging.PagedList;
 import android.util.Log;
 
 import com.banderkat.trendingmovies.data.models.Movie;
+import com.banderkat.trendingmovies.data.models.MovieInfo;
+import com.banderkat.trendingmovies.data.models.MovieVideo;
 import com.banderkat.trendingmovies.data.networkresource.Resource;
 import com.banderkat.trendingmovies.trendingmovies.R;
+
+import java.util.List;
 
 import javax.inject.Inject;
 
@@ -34,8 +38,18 @@ public class MovieViewModel extends ViewModel {
         return movieRepository.loadMovies(isMostPopular);
     }
 
+    public LiveData<Resource<List<MovieVideo>>> loadMovieVideos(long movieId) {
+        Log.d(LOG_LABEL, "loading movie videos in view model for movie " + movieId);
+        return movieRepository.loadMovieVideos(movieId);
+    }
+
     public LiveData<Movie> getMovie(long movieId) {
-        Log.d(LOG_LABEL, "getting move in view model: " + movieId);
+        Log.d(LOG_LABEL, "getting movie in view model: " + movieId);
         return movieRepository.getMovie(movieId);
+    }
+
+    public LiveData<MovieInfo> getMovieInfo(long movieId) {
+        Log.d(LOG_LABEL, "getting movie with additional info: " + movieId);
+        return movieRepository.getMovieInfo(movieId);
     }
 }

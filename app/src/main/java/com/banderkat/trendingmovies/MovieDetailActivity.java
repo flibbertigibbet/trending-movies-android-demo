@@ -1,25 +1,36 @@
 package com.banderkat.trendingmovies;
 
 import android.arch.lifecycle.ViewModelProviders;
+import android.content.ActivityNotFoundException;
 import android.content.Intent;
 import android.databinding.DataBindingUtil;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.view.View;
+import android.widget.SimpleExpandableListAdapter;
 
 import com.banderkat.trendingmovies.data.MovieViewModel;
 import com.banderkat.trendingmovies.data.models.Movie;
+import com.banderkat.trendingmovies.data.models.MovieInfo;
+import com.banderkat.trendingmovies.data.models.MovieVideo;
 import com.banderkat.trendingmovies.di.MovieViewModelFactory;
 import com.banderkat.trendingmovies.trendingmovies.R;
 import com.banderkat.trendingmovies.trendingmovies.databinding.ActivityMovieDetailBinding;
+import com.banderkat.trendingmovies.trendingmovies.databinding.MovieDetailHeaderBinding;
 import com.squareup.picasso.Picasso;
 
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import javax.inject.Inject;
 
@@ -33,7 +44,7 @@ public class MovieDetailActivity extends AppCompatActivity {
     MovieViewModel viewModel;
 
     public static final String MOVIE_ID_DETAIL_KEY = "movie_id";
-
+    private static final String YOUTUBE_URL = "http://www.youtube.com/watch?v=";
     private static final String LOG_LABEL = "MovieDetail";
     private static final DateFormat releaseDateFormat, displayFormat;
 
@@ -44,7 +55,9 @@ public class MovieDetailActivity extends AppCompatActivity {
 
     private long movieId;
     private Movie movie;
+    private MovieInfo movieInfo;
     private ActivityMovieDetailBinding binding;
+    private MovieDetailHeaderBinding headerBinding;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -69,18 +82,44 @@ public class MovieDetailActivity extends AppCompatActivity {
 
     private void loadMovieData() {
         Log.d(LOG_LABEL, "loading movie details for ID " + movieId);
-        viewModel.getMovie(movieId).observe(this, movie -> {
-            if (movie == null) {
+        binding = DataBindingUtil.setContentView(this, R.layout.activity_movie_detail);
+        View header = getLayoutInflater().inflate(R.layout.movie_detail_header, null);
+        headerBinding = DataBindingUtil.bind(header);
+        binding.movieDetailExpandableList.addHeaderView(header);
+
+        viewModel.getMovieInfo(movieId).observe(this, movieInfo -> {
+            if (movieInfo == null || movieInfo.getMovie() == null) {
                 Log.e(LOG_LABEL, "Could not find movie to show detail for ID: " + movieId);
                 return;
             }
 
+            this.movieInfo = movieInfo;
+            this.movie = movieInfo.getMovie();
             Log.d(LOG_LABEL, "Loaded data for movie " + movie.getTitle());
-            this.movie = movie;
 
-            binding = DataBindingUtil.setContentView(this, R.layout.activity_movie_detail);
-            binding.setMovie(movie);
-            binding.setActivity(this);
+            if (movie.gotVideos()) {
+                Log.d(LOG_LABEL, "Found " + movieInfo.getVideos().size() + " videos for movie in info");
+                for (MovieVideo video : movieInfo.getVideos()) {
+                    Log.d(LOG_LABEL, "Video: " + video.getName() + ": " + video.getKey());
+                }
+
+                setUpExpandableList(movieInfo);
+            } else {
+                Log.w(LOG_LABEL, "Have no videos yet for movie");
+                viewModel.loadMovieVideos(movieId).observe(this, response -> {
+                    if (response == null || response.data == null) {
+                        Log.w(LOG_LABEL, "no videos found yet for movie...");
+                        return;
+                    }
+                    // outside observer should refresh itself, so nothing to do here
+                    Log.d(LOG_LABEL, "Loaded videos for movie.");
+                    viewModel.loadMovieVideos(movieId).removeObservers(this);
+                });
+            }
+
+            headerBinding.setMovie(movie);
+            headerBinding.setMovieInfo(movieInfo);
+            headerBinding.setActivity(this);
 
             ActionBar actionBar = getSupportActionBar();
 
@@ -92,12 +131,103 @@ public class MovieDetailActivity extends AppCompatActivity {
             actionBar.setTitle(movie.getTitle());
             actionBar.setDisplayHomeAsUpEnabled(true);
 
+
             Picasso.with(this)
                     .load(movie.getPosterPath())
                     .placeholder(R.drawable.ic_image_placeholder_white_185x277dp)
                     .fit()
-                    .into(binding.movieDetailPoster);
+                    .into(headerBinding.movieDetailPoster);
         });
+    }
+
+    private void setUpExpandableList(MovieInfo movieInfo) {
+        final String groupName = "GROUP_NAME";
+        final String valueName = "CHILD_VALUE";
+        final String nameValue = "CHILD_NAME";
+
+        final String videoGroup = getString(R.string.details_videos_group);
+        final String reviewsGroup = getString(R.string.details_reviews_group);
+
+        List<HashMap<String, String>> groups = new ArrayList<>(2);
+        HashMap<String, String> videos = new HashMap<>(1);
+        videos.put(groupName, videoGroup);
+        groups.add(videos);
+        HashMap<String, String> reviews = new HashMap<>(1);
+        reviews.put(groupName, reviewsGroup);
+        groups.add(reviews);
+
+        List<List<Map<String, String>>> childData = new ArrayList<>(2);
+        ArrayList<Map<String, String>> videoList = new ArrayList<>(movieInfo.getVideos().size());
+
+        for (MovieVideo video : movieInfo.getVideos()) {
+            HashMap<String, String> videoMap = new HashMap<>(2);
+            videoMap.put(nameValue, video.getName());
+            videoMap.put(valueName, video.getType());
+            videoList.add(videoMap);
+        }
+
+        childData.add(videoList);
+
+        // TODO: load reviews
+        ArrayList<Map<String, String>> reviewsList = new ArrayList<>(1);
+        HashMap<String, String> reviewMap = new HashMap<>(2);
+        reviewMap.put(nameValue, "Test review");
+        reviewMap.put(valueName, "Second line here");
+        reviewsList.add(reviewMap);
+
+        childData.add(reviewsList);
+
+        SimpleExpandableListAdapter adapter = new SimpleExpandableListAdapter(this,
+                groups,
+                android.R.layout.simple_expandable_list_item_1,
+                new String[] {groupName},
+                new int[] { android.R.id.text1 },
+                childData,
+                android.R.layout.simple_expandable_list_item_2,
+                new String[] { nameValue, valueName },
+                new int[] { android.R.id.text1, android.R.id.text2 });
+
+        binding.movieDetailExpandableList.setAdapter(adapter);
+
+        binding.movieDetailExpandableList.setOnChildClickListener((parent, v, groupPosition, childPosition, id) -> {
+            Log.d(LOG_LABEL, "Clicked on child " + childPosition + " in group " + groupPosition);
+
+            switch (groupPosition) {
+                case 0:
+                    // Video row clicked
+                    goToVideoAtIndex(childPosition);
+                    break;
+                case 1:
+                    // Review row clicked
+                    break;
+                default:
+                    Log.e(LOG_LABEL, "unrecognized group " + groupPosition);
+            }
+            return true;
+        });
+
+        Log.d(LOG_LABEL, "Set up expandable list adapter");
+    }
+
+    private void goToVideoAtIndex(int index) {
+        if (movie == null || !movie.gotVideos() || movieInfo == null || movieInfo.getVideos() == null) {
+            Log.e(LOG_LABEL, "Cannot get video for index " + index);
+            return;
+        }
+
+        Log.d(LOG_LABEL, "go to video for index " + index);
+        MovieVideo video = movieInfo.getVideos().get(index);
+
+        // Launch YouTube player, or fallback on opening in web browser
+        // based on https://stackoverflow.com/a/12439378
+        Intent appIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("vnd.youtube:" + video.getKey()));
+        Intent webIntent = new Intent(Intent.ACTION_VIEW,
+                Uri.parse(YOUTUBE_URL + video.getKey()));
+        try {
+            startActivity(appIntent);
+        } catch (ActivityNotFoundException ex) {
+            startActivity(webIntent);
+        }
     }
 
     public String getReleaseDisplayDate() {
