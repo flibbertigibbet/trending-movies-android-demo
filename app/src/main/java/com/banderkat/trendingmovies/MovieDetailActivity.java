@@ -16,6 +16,7 @@ import android.widget.SimpleExpandableListAdapter;
 import com.banderkat.trendingmovies.data.MovieViewModel;
 import com.banderkat.trendingmovies.data.models.Movie;
 import com.banderkat.trendingmovies.data.models.MovieInfo;
+import com.banderkat.trendingmovies.data.models.MovieReview;
 import com.banderkat.trendingmovies.data.models.MovieVideo;
 import com.banderkat.trendingmovies.di.MovieViewModelFactory;
 import com.banderkat.trendingmovies.trendingmovies.R;
@@ -102,8 +103,6 @@ public class MovieDetailActivity extends AppCompatActivity {
                 for (MovieVideo video : movieInfo.getVideos()) {
                     Log.d(LOG_LABEL, "Video: " + video.getName() + ": " + video.getKey());
                 }
-
-                setUpExpandableList(movieInfo);
             } else {
                 Log.w(LOG_LABEL, "Have no videos yet for movie");
                 viewModel.loadMovieVideos(movieId).observe(this, response -> {
@@ -115,6 +114,28 @@ public class MovieDetailActivity extends AppCompatActivity {
                     Log.d(LOG_LABEL, "Loaded videos for movie.");
                     viewModel.loadMovieVideos(movieId).removeObservers(this);
                 });
+            }
+
+            if (movie.gotReviews()) {
+                Log.d(LOG_LABEL, "Found " + movieInfo.getReviews().size() + " reviews for movie in info");
+                for (MovieReview review : movieInfo.getReviews()) {
+                    Log.d(LOG_LABEL, "Review: " + review.getAuthor());
+                }
+            } else {
+                Log.w(LOG_LABEL, "Have no reviews yet for movie");
+                viewModel.loadMovieReviews(movieId).observe(this, response -> {
+                    if (response == null || response.data == null) {
+                        Log.w(LOG_LABEL, "no reviews found yet for movie...");
+                        return;
+                    }
+                    // outside observer should refresh itself, so nothing to do here
+                    Log.d(LOG_LABEL, "Loaded reviews for movie.");
+                    viewModel.loadMovieReviews(movieId).removeObservers(this);
+                });
+            }
+
+            if (movie.gotVideos() && movie.gotReviews()) {
+                setUpExpandableList(movieInfo);
             }
 
             headerBinding.setMovie(movie);
@@ -168,12 +189,13 @@ public class MovieDetailActivity extends AppCompatActivity {
 
         childData.add(videoList);
 
-        // TODO: load reviews
-        ArrayList<Map<String, String>> reviewsList = new ArrayList<>(1);
-        HashMap<String, String> reviewMap = new HashMap<>(2);
-        reviewMap.put(nameValue, "Test review");
-        reviewMap.put(valueName, "Second line here");
-        reviewsList.add(reviewMap);
+        ArrayList<Map<String, String>> reviewsList = new ArrayList<>(movieInfo.getReviews().size());
+        for (MovieReview review : movieInfo.getReviews()) {
+            HashMap<String, String> reviewMap = new HashMap<>(2);
+            reviewMap.put(nameValue, review.getAuthor());
+            reviewMap.put(valueName, review.getContent());
+            reviewsList.add(reviewMap);
+        }
 
         childData.add(reviewsList);
 

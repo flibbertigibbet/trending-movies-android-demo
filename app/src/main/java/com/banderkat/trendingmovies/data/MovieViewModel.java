@@ -7,6 +7,7 @@ import android.util.Log;
 
 import com.banderkat.trendingmovies.data.models.Movie;
 import com.banderkat.trendingmovies.data.models.MovieInfo;
+import com.banderkat.trendingmovies.data.models.MovieReview;
 import com.banderkat.trendingmovies.data.models.MovieVideo;
 import com.banderkat.trendingmovies.data.networkresource.Resource;
 import com.banderkat.trendingmovies.trendingmovies.R;
@@ -41,6 +42,11 @@ public class MovieViewModel extends ViewModel {
     public LiveData<Resource<List<MovieVideo>>> loadMovieVideos(long movieId) {
         Log.d(LOG_LABEL, "loading movie videos in view model for movie " + movieId);
         return movieRepository.loadMovieVideos(movieId);
+    }
+
+    public LiveData<Resource<List<MovieReview>>> loadMovieReviews(long movieId) {
+        Log.d(LOG_LABEL, "loading movie reviews in view model for movie " + movieId);
+        return movieRepository.loadMovieReviews(movieId);
     }
 
     public LiveData<Movie> getMovie(long movieId) {
