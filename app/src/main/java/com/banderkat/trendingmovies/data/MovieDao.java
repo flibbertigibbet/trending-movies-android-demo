@@ -11,6 +11,8 @@ import android.os.AsyncTask;
 
 import com.banderkat.trendingmovies.data.models.Movie;
 import com.banderkat.trendingmovies.data.networkresource.MoviePagedDataSource;
+import com.banderkat.trendingmovies.data.networkresource.MoviePopularPagedDataSource;
+import com.banderkat.trendingmovies.data.networkresource.MovieTopRatedPagedDataSource;
 
 import java.util.List;
 
@@ -18,10 +20,10 @@ import java.util.List;
 public abstract class MovieDao {
 
     @Query("SELECT * from movie WHERE popular_page = :pageNumber ORDER BY popular_page_order ASC")
-    public abstract MoviePagedDataSource.Factory<Integer, Movie> getPopularMovies(int pageNumber);
+    public abstract MoviePopularPagedDataSource.Factory<Integer, Movie> getPopularMovies(int pageNumber);
 
     @Query("SELECT * from movie WHERE top_rated_page = :pageNumber ORDER BY top_rated_page_order ASC")
-    public abstract MoviePagedDataSource.Factory<Integer, Movie> getTopRatedMovies(long pageNumber);
+    public abstract MovieTopRatedPagedDataSource.Factory<Integer, Movie> getTopRatedMovies(long pageNumber);
 
     @Query("SELECT * from movie")
     public abstract LiveData<List<Movie>> getMovies();

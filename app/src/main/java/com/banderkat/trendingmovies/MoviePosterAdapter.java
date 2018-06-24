@@ -1,12 +1,11 @@
 package com.banderkat.trendingmovies;
 
-import android.arch.paging.PagedList;
-import android.arch.paging.PagedListAdapter;
 import android.content.Context;
 import android.databinding.BindingAdapter;
 import android.databinding.DataBindingUtil;
 import android.databinding.ViewDataBinding;
 import android.support.annotation.NonNull;
+import android.support.v7.recyclerview.extensions.ListAdapter;
 import android.support.v7.util.DiffUtil;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
@@ -19,15 +18,20 @@ import com.banderkat.trendingmovies.trendingmovies.BR;
 import com.banderkat.trendingmovies.trendingmovies.R;
 import com.squareup.picasso.Picasso;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 import static com.banderkat.trendingmovies.MainActivity.NUM_COLUMNS;
 
 
-public class  MoviePosterAdapter extends PagedListAdapter {
+public class  MoviePosterAdapter extends ListAdapter<Movie, MoviePosterAdapter.PosterViewHolder> {
+
+    public static final int SCROLL_READ_AHEAD = 2;
 
     public interface MoviePosterClickListener {
         void onItemClick(long movieId);
+        void loadNext(int index);
     }
 
     public static final String POSTER_PICASSO_GROUP = "movie_posters";
@@ -39,10 +43,10 @@ public class  MoviePosterAdapter extends PagedListAdapter {
 
     public static final double ASPECT_RATIO = 1.5;
 
-    private PagedList<Movie> movies;
+    private ArrayList<Movie> movies;
     private int parentWidth;
 
-    private static class PosterViewHolder extends RecyclerView.ViewHolder {
+    public static class PosterViewHolder extends RecyclerView.ViewHolder {
 
         private final ViewDataBinding binding;
 
@@ -77,6 +81,7 @@ public class  MoviePosterAdapter extends PagedListAdapter {
             }
         });
 
+        setHasStableIds(true);
         this.listener = listener;
     }
 
@@ -110,10 +115,15 @@ public class  MoviePosterAdapter extends PagedListAdapter {
     }
 
     @Override
-    public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
+    public void onBindViewHolder(@NonNull PosterViewHolder holder, int position) {
         Movie movie = getItem(position);
-        ((PosterViewHolder)holder).bind(movie);
+        holder.bind(movie);
         holder.itemView.setTag(movie);
+
+        int itemCount = getItemCount();
+        if (itemCount >= SCROLL_READ_AHEAD && position > itemCount - SCROLL_READ_AHEAD) {
+            listener.loadNext(getItemCount() - 1);
+        }
 
         holder.itemView.setOnClickListener(v -> {
             if (movie != null) {
@@ -135,10 +145,22 @@ public class  MoviePosterAdapter extends PagedListAdapter {
         }
     }
 
+    public void appendList(List<Movie> list) {
+        if (movies == null) {
+            Log.w(LOG_LABEL, "Attempting to append to an uninitialized list");
+            movies = new ArrayList<>(list.size());
+        }
+        movies.addAll(list);
+    }
+
     @Override
-    public void submitList(PagedList pagedList) {
-        super.submitList(pagedList);
-        this.movies = pagedList;
+    public void submitList(List<Movie> list) {
+        if (movies == null) {
+            movies = new ArrayList<>(list.size());
+        }
+        movies.clear();
+        movies.addAll(list);
+        super.submitList(movies);
     }
 
     @Override

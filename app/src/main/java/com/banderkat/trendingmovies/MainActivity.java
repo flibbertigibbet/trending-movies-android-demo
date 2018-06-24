@@ -24,6 +24,8 @@ import javax.inject.Inject;
 
 import static com.banderkat.trendingmovies.MovieDetailActivity.MOVIE_ID_DETAIL_KEY;
 import static com.banderkat.trendingmovies.MoviePosterAdapter.POSTER_PICASSO_GROUP;
+import static com.banderkat.trendingmovies.data.MovieRepository.PAGE_SIZE;
+import static com.banderkat.trendingmovies.data.networkresource.NetworkBoundResource.FIRST_PAGE;
 
 public class MainActivity extends AppCompatActivity implements MoviePosterAdapter.MoviePosterClickListener {
 
@@ -39,10 +41,12 @@ public class MainActivity extends AppCompatActivity implements MoviePosterAdapte
     RecyclerView recyclerView;
     Menu menu;
     MoviePosterAdapter adapter;
+    RecyclerView.LayoutManager layoutManager;
 
     private boolean sortByMostPopular = true;
 
     private LiveData<Resource<PagedList<Movie>>> liveData;
+    private PagedList<Movie> pagedList;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -50,9 +54,11 @@ public class MainActivity extends AppCompatActivity implements MoviePosterAdapte
         setContentView(R.layout.activity_main);
 
         recyclerView = findViewById(R.id.main_activity_gridview);
-        recyclerView.setLayoutManager(new GridLayoutManager(this, NUM_COLUMNS));
+        layoutManager = new GridLayoutManager(this, NUM_COLUMNS);
+        recyclerView.setLayoutManager(layoutManager);
 
         recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
+
             @Override
             public void onScrollStateChanged(RecyclerView recyclerView, int scrollState) {
                 final Picasso picasso = Picasso.with(MainActivity.this);
@@ -67,7 +73,6 @@ public class MainActivity extends AppCompatActivity implements MoviePosterAdapte
 
         viewModel = ViewModelProviders.of(this, viewModelFactory)
                 .get(MovieViewModel.class);
-
         loadMovies();
     }
 
@@ -76,6 +81,7 @@ public class MainActivity extends AppCompatActivity implements MoviePosterAdapte
         if (liveData != null) {
             liveData.removeObservers(this);
         }
+
         liveData = viewModel.loadMovies(sortByMostPopular);
         liveData.observe(this, response -> {
             if (response == null || response.data == null) {
@@ -97,26 +103,38 @@ public class MainActivity extends AppCompatActivity implements MoviePosterAdapte
                 return;
             }
 
-            Log.d(LOG_LABEL, "Found " + response.data.size() + " movies");
+            pagedList = response.data;
 
-            for (Movie movie: response.data) {
-                Log.d(LOG_LABEL, "Movie: " + movie.toString());
+            long page = FIRST_PAGE;
+            if (!pagedList.isEmpty()) {
+                Movie movie = pagedList.get(0);
+                if (movie != null) {
+                    page = sortByMostPopular ? movie.getPopularPage() : movie.getTopRatedPage();
+                }
             }
 
-            // Reset list adapter if either it isn't set up, or if a filter was applied/removed.
-            if (adapter == null || response.data.size() != adapter.getItemCount()) {
+            Log.d(LOG_LABEL, "Got " + pagedList.size() + " movies for page #" + page);
+
+            if (adapter == null) {
                 adapter = new MoviePosterAdapter(this, recyclerView.getMeasuredWidth(), this);
                 // must set the list before the adapter for the differ to initialize properly
-                adapter.submitList(response.data);
+                adapter.submitList(pagedList);
                 recyclerView.setAdapter(adapter);
+                adapter.notifyDataSetChanged();
             } else {
-                Log.d(LOG_LABEL, "swap adapters");
-                MoviePosterAdapter newAdapter = adapter = new MoviePosterAdapter(this, recyclerView.getMeasuredWidth(), this);;
-                newAdapter.submitList(response.data);
-                recyclerView.swapAdapter(newAdapter, true);
-                adapter = newAdapter;
+                if (page <= FIRST_PAGE) {
+                    // swap out adapter on first page load
+                    MoviePosterAdapter newAdapter = adapter = new MoviePosterAdapter(this, recyclerView.getMeasuredWidth(), this);
+                    newAdapter.submitList(pagedList);
+                    recyclerView.swapAdapter(newAdapter, true);
+                    adapter = newAdapter;
+                    adapter.notifyDataSetChanged();
+                } else {
+                    // append next page of data to existing adapter
+                    adapter.appendList(pagedList);
+                    adapter.notifyDataSetChanged();
+                }
             }
-            adapter.notifyDataSetChanged();
         });
     }
 
@@ -156,5 +174,16 @@ public class MainActivity extends AppCompatActivity implements MoviePosterAdapte
         Intent intent = new Intent(this, MovieDetailActivity.class);
         intent.putExtra(MOVIE_ID_DETAIL_KEY, movieId);
         startActivity(intent);
+    }
+
+    @Override
+    public void loadNext(int index) {
+        if (pagedList != null) {
+            Log.d(LOG_LABEL, "Scrolled to bottom; load next page");
+            // support infinite scrolling with paginated results
+            pagedList.loadAround(index + PAGE_SIZE);
+        } else {
+            Log.w(LOG_LABEL, "Have no paged list from which to load next page");
+        }
     }
 }

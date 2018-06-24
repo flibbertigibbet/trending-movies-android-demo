@@ -39,7 +39,7 @@ public class MovieNetworkBoundResource extends NetworkBoundResource<PagedList<Mo
         this.apiKey = apiKey;
         this.isMostPopular = isMostPopular;
 
-        setupSource();
+        setupSource(FIRST_PAGE);
     }
 
     @Override
@@ -49,11 +49,11 @@ public class MovieNetworkBoundResource extends NetworkBoundResource<PagedList<Mo
             Log.e(LOG_LABEL, "Requested page " + pageNum + " but got " + item.getPage());
             return;
         }
-        Long timestamp = System.currentTimeMillis();
+
         List<Movie> movies = item.getResults();
         for (int i = 0; i < movies.size(); i++) {
             Movie movie = movies.get(i);
-            movie.setTimestamp(timestamp);
+            movie.setTimestamp(System.currentTimeMillis());
 
             // track pagination and order from the results on each movie
             if (isMostPopular) {
@@ -68,16 +68,12 @@ public class MovieNetworkBoundResource extends NetworkBoundResource<PagedList<Mo
     }
 
     @Override
-    protected int pageToFetch(@Nullable PagedList<Movie> data) {
+    protected boolean fetchPageFromNetwork(@Nullable PagedList<Movie> data, int pageNumber) {
         if (data == null || data.isEmpty()) {
-            return FIRST_PAGE;
+            return true;
         }
 
         Movie first = data.get(0);
-        long pageNum = isMostPopular ? first.getPopularPage() : first.getTopRatedPage();
-        if (pageNum < FIRST_PAGE) {
-            pageNum = FIRST_PAGE;
-        }
         boolean expired = (System.currentTimeMillis() - first.getTimestamp()) > RATE_LIMIT;
         if (expired) {
             Log.d(LOG_LABEL, "Clearing cache in database");
@@ -85,10 +81,14 @@ public class MovieNetworkBoundResource extends NetworkBoundResource<PagedList<Mo
             Log.d(LOG_LABEL, "current timestamp: " + System.currentTimeMillis());
             Log.d(LOG_LABEL, "rate limit: " + RATE_LIMIT);
             movieDao.clear(); // throw out the full cache
-            return (int)pageNum;
+            return true;
         } else {
-            Log.d(LOG_LABEL, "Use database cache");
-            return -1; // flag to not fetch
+            long lastPage = isMostPopular ? first.getPopularPage() : first.getTopRatedPage();
+            if (lastPage >= pageNumber) {
+                Log.d(LOG_LABEL, "Use database cache");
+                return false;
+            }
+            return true;
         }
     }
 
@@ -105,33 +105,42 @@ public class MovieNetworkBoundResource extends NetworkBoundResource<PagedList<Mo
             factory = movieDao.getTopRatedMovies(pageNumber);
         }
 
-        return new LivePagedListBuilder<>(factory, MovieRepository.PAGE_SIZE)
-                .setBoundaryCallback(new PagedList.BoundaryCallback<Movie>() {
+        PagedList.Config config = new PagedList.Config.Builder()
+                .setEnablePlaceholders(true)
+                .setPageSize(MovieRepository.PAGE_SIZE)
+                .setPrefetchDistance(4).build();
+
+        return new LivePagedListBuilder<>(factory, config).setBoundaryCallback(new PagedList.BoundaryCallback<Movie>() {
 
             @Override
             public void onZeroItemsLoaded() {
                 super.onZeroItemsLoaded();
-                if (isMostPopular) {
-                    movieDao.getPopularMovies(pageNumber);
-                } else {
-                    movieDao.getTopRatedMovies(pageNumber);
-                }
-
+                Log.w(LOG_LABEL, "onZeroItemsLoaded");
             }
 
             @Override
             public void onItemAtFrontLoaded(@NonNull Movie itemAtFront) {
                 super.onItemAtFrontLoaded(itemAtFront);
+                Log.d(LOG_LABEL, "onItemAtFrontLoaded");
             }
 
             @Override
             public void onItemAtEndLoaded(@NonNull Movie itemAtEnd) {
                 super.onItemAtEndLoaded(itemAtEnd);
+                Log.d(LOG_LABEL, "onItemAtEndLoaded");
+                int lastPage;
                 if (isMostPopular) {
-                    movieDao.getPopularMovies(pageNumber);
+                    lastPage = (int)itemAtEnd.getPopularPage();
                 } else {
-                    movieDao.getTopRatedMovies(pageNumber);
+                    lastPage = (int)itemAtEnd.getTopRatedPage();
                 }
+
+                if (lastPage < FIRST_PAGE) {
+                    Log.e(LOG_LABEL, "Failed to find last loaded page to load next");
+                    return;
+                }
+
+                setupSource(lastPage + 1);
 
             }
         }).setInitialLoadKey(1).build();
@@ -140,6 +149,7 @@ public class MovieNetworkBoundResource extends NetworkBoundResource<PagedList<Mo
     @NonNull
     @Override
     protected LiveData<ApiResponse<MovieQueryResponse>> createCall(int pageNum) {
+        Log.d(LOG_LABEL, "createCall for page number " + pageNum);
         if (isMostPopular) {
             return movieWebservice.getPopularMovies(apiKey, (long)pageNum);
         } else {
