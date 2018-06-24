@@ -43,7 +43,7 @@ public class MovieRepository {
     }
 
     public LiveData<Resource<PagedList<Movie>>> loadMovies(boolean isMostPopular) {
-        return new MovieNetworkBoundResource(movieDao, movieWebservice, apiKey, isMostPopular)
+        return new MovieNetworkBoundResource(movieDao, videoDao, movieWebservice, apiKey, isMostPopular)
                 .getAsLiveData();
     }
 
