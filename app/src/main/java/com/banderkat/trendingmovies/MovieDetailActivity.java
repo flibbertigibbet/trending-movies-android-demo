@@ -11,6 +11,7 @@ import android.util.Log;
 
 import com.banderkat.trendingmovies.data.MovieViewModel;
 import com.banderkat.trendingmovies.data.models.Movie;
+import com.banderkat.trendingmovies.data.models.MovieVideo;
 import com.banderkat.trendingmovies.di.MovieViewModelFactory;
 import com.banderkat.trendingmovies.trendingmovies.R;
 import com.banderkat.trendingmovies.trendingmovies.databinding.ActivityMovieDetailBinding;
@@ -69,14 +70,32 @@ public class MovieDetailActivity extends AppCompatActivity {
 
     private void loadMovieData() {
         Log.d(LOG_LABEL, "loading movie details for ID " + movieId);
-        viewModel.getMovie(movieId).observe(this, movie -> {
-            if (movie == null) {
+        viewModel.getMovieInfo(movieId).observe(this, movieInfo -> {
+            if (movieInfo == null || movieInfo.getMovie() == null) {
                 Log.e(LOG_LABEL, "Could not find movie to show detail for ID: " + movieId);
                 return;
             }
 
+            this.movie = movieInfo.getMovie();
             Log.d(LOG_LABEL, "Loaded data for movie " + movie.getTitle());
-            this.movie = movie;
+
+            if (movie.gotVideos()) {
+                Log.d(LOG_LABEL, "Found " + movieInfo.getVideos().size() + " videos for movie in info");
+                for (MovieVideo video : movieInfo.getVideos()) {
+                    Log.d(LOG_LABEL, "Video: " + video.getName());
+                }
+            } else {
+                Log.w(LOG_LABEL, "Have no videos yet for movie");
+                viewModel.loadMovieVideos(movieId).observe(this, response -> {
+                    if (response == null || response.data == null) {
+                        Log.w(LOG_LABEL, "no videos found yet for movie...");
+                        return;
+                    }
+                    // outside observer should refresh itself, so nothing to do here
+                    Log.d(LOG_LABEL, "Loaded videos for movie.");
+                    viewModel.loadMovieVideos(movieId).removeObservers(this);
+                });
+            }
 
             binding = DataBindingUtil.setContentView(this, R.layout.activity_movie_detail);
             binding.setMovie(movie);

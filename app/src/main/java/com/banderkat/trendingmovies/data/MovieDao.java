@@ -6,11 +6,12 @@ import android.arch.persistence.room.Delete;
 import android.arch.persistence.room.Insert;
 import android.arch.persistence.room.OnConflictStrategy;
 import android.arch.persistence.room.Query;
+import android.arch.persistence.room.Transaction;
 import android.arch.persistence.room.Update;
 import android.os.AsyncTask;
 
 import com.banderkat.trendingmovies.data.models.Movie;
-import com.banderkat.trendingmovies.data.networkresource.MoviePagedDataSource;
+import com.banderkat.trendingmovies.data.models.MovieInfo;
 import com.banderkat.trendingmovies.data.networkresource.MoviePopularPagedDataSource;
 import com.banderkat.trendingmovies.data.networkresource.MovieTopRatedPagedDataSource;
 
@@ -30,6 +31,10 @@ public abstract class MovieDao {
 
     @Query("SELECT * FROM movie WHERE id = :movieId")
     public abstract LiveData<Movie> getMovie(long movieId);
+
+    @Transaction
+    @Query("SELECT * FROM movie WHERE id = :movieId")
+    public abstract LiveData<MovieInfo> getMovieInfo(long movieId);
 
     @SuppressWarnings("StaticFieldLeak")
     @Query("DELETE FROM movie")
