@@ -37,7 +37,7 @@ dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation 'com.android.support:appcompat-v7:27.1.1'
     implementation 'com.android.support.constraint:constraint-layout:1.1.0'
-    implementation  'com.squareup.picasso:picasso:2.5.2'
+    implementation 'com.squareup.picasso:picasso:2.5.2'
     // Architecture Components
     def archComponentsVersion = '1.1.1'
     def roomVersion = '1.1.0'
@@ -58,6 +58,7 @@ dependencies {
     def paging_version = "1.0.0"
     implementation "android.arch.paging:runtime:$paging_version"
     // alternatively - without Android dependencies for testing
+    implementation 'com.android.support:design:27.1.1'
     testImplementation "android.arch.paging:common:$paging_version"
     // Dagger 2
     def daggerVersion = '2.15'

@@ -7,6 +7,7 @@ import android.util.Log;
 import com.banderkat.trendingmovies.data.MovieDao;
 import com.banderkat.trendingmovies.data.MovieDatabase;
 import com.banderkat.trendingmovies.data.MovieWebservice;
+import com.banderkat.trendingmovies.data.ReviewDao;
 import com.banderkat.trendingmovies.data.VideoDao;
 import com.banderkat.trendingmovies.data.networkresource.LiveDataCallAdapterFactory;
 import com.banderkat.trendingmovies.trendingmovies.R;
@@ -73,6 +74,12 @@ class AppModule {
     @Provides
     VideoDao provideVideoDao(MovieDatabase db) {
         return db.videoDao();
+    }
+
+    @Singleton
+    @Provides
+    ReviewDao provideReviewDao(MovieDatabase db) {
+        return db.reviewDao();
     }
 
     @Singleton

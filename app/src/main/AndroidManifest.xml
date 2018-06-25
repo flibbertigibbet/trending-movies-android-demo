@@ -19,11 +19,20 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name="com.banderkat.trendingmovies.MovieDetailActivity"
+        <activity
+            android:name="com.banderkat.trendingmovies.MovieDetailActivity"
             android:parentActivityName="com.banderkat.trendingmovies.MainActivity">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.banderkat.trendingmovies.MainActivity" />
+        </activity>
+        <activity
+            android:name="com.banderkat.trendingmovies.ReviewActivity"
+            android:label="@string/title_activity_review"
+            android:parentActivityName="com.banderkat.trendingmovies.MovieDetailActivity">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.banderkat.trendingmovies.MovieDetailActivity" />
         </activity>
     </application>
 

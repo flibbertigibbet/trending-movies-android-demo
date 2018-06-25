@@ -5,9 +5,11 @@ import android.arch.paging.PagedList;
 
 import com.banderkat.trendingmovies.data.models.Movie;
 import com.banderkat.trendingmovies.data.models.MovieInfo;
+import com.banderkat.trendingmovies.data.models.MovieReview;
 import com.banderkat.trendingmovies.data.models.MovieVideo;
 import com.banderkat.trendingmovies.data.networkresource.MovieNetworkBoundResource;
 import com.banderkat.trendingmovies.data.networkresource.Resource;
+import com.banderkat.trendingmovies.data.networkresource.ReviewNetworkBoundResource;
 import com.banderkat.trendingmovies.data.networkresource.VideoNetworkBoundResource;
 
 import java.util.List;
@@ -22,13 +24,15 @@ public class MovieRepository {
 
     public final MovieWebservice movieWebservice;
     public final MovieDao movieDao;
+    public final ReviewDao reviewDao;
     public final VideoDao videoDao;
     public final String apiKey;
 
     @Inject
-    public MovieRepository(MovieWebservice movieWebservice, MovieDao movieDao, VideoDao videoDao, String apiKey) {
+    public MovieRepository(MovieWebservice movieWebservice, MovieDao movieDao, ReviewDao reviewDao, VideoDao videoDao, String apiKey) {
         this.movieWebservice = movieWebservice;
         this.movieDao = movieDao;
+        this.reviewDao = reviewDao;
         this.videoDao = videoDao;
         this.apiKey = apiKey;
     }
@@ -49,6 +53,11 @@ public class MovieRepository {
 
     public LiveData<Resource<List<MovieVideo>>> loadMovieVideos(long movieId) {
         return new VideoNetworkBoundResource(videoDao, movieWebservice, apiKey, movieId)
+                .getAsLiveData();
+    }
+
+    public LiveData<Resource<List<MovieReview>>> loadMovieReviews(long movieId) {
+        return new ReviewNetworkBoundResource(reviewDao, movieWebservice, apiKey, movieId)
                 .getAsLiveData();
     }
 }

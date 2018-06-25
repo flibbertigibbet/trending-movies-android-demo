@@ -3,6 +3,7 @@ package com.banderkat.trendingmovies.data;
 import android.arch.lifecycle.LiveData;
 
 import com.banderkat.trendingmovies.data.models.MovieQueryResponse;
+import com.banderkat.trendingmovies.data.models.MovieReviewsQueryResponse;
 import com.banderkat.trendingmovies.data.models.MovieVideosQueryResponse;
 import com.banderkat.trendingmovies.data.networkresource.ApiResponse;
 
@@ -31,4 +32,7 @@ public interface MovieWebservice {
     LiveData<ApiResponse<MovieVideosQueryResponse>> getMovieVideos(@Path("id") Long id,
                                                                    @Query("api_key") String api_key);
 
+    @GET("movie/{id}/reviews")
+    LiveData<ApiResponse<MovieReviewsQueryResponse>> getMovieReviews(@Path("id") Long id,
+                                                                     @Query("api_key") String api_key);
 }
