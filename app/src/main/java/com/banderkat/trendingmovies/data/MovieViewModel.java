@@ -6,6 +6,7 @@ import android.arch.paging.PagedList;
 import android.util.Log;
 
 import com.banderkat.trendingmovies.data.models.Movie;
+import com.banderkat.trendingmovies.data.models.MovieFlag;
 import com.banderkat.trendingmovies.data.models.MovieInfo;
 import com.banderkat.trendingmovies.data.models.MovieReview;
 import com.banderkat.trendingmovies.data.models.MovieVideo;
@@ -21,16 +22,9 @@ public class MovieViewModel extends ViewModel {
     private static final String LOG_LABEL = "ViewModel";
 
     public final MovieRepository movieRepository;
-    public final MovieDao movieDao;
 
     @Inject
-    public MovieViewModel(MovieRepository movieRepository, MovieDao movieDao) {
-        if (movieDao != null) {
-            Log.d(LOG_LABEL, "view model has DAO");
-        } else {
-            Log.d(LOG_LABEL, "view model has no DAO!");
-        }
-        this.movieDao = movieDao;
+    public MovieViewModel(MovieRepository movieRepository) {
         this.movieRepository = movieRepository;
     }
 
@@ -57,5 +51,9 @@ public class MovieViewModel extends ViewModel {
     public LiveData<MovieInfo> getMovieInfo(long movieId) {
         Log.d(LOG_LABEL, "getting movie with additional info: " + movieId);
         return movieRepository.getMovieInfo(movieId);
+    }
+
+    public void setMovieFlag(MovieFlag flag) {
+        movieRepository.setFlag(flag);
     }
 }

@@ -1,9 +1,12 @@
 package com.banderkat.trendingmovies.data;
 
+import android.annotation.SuppressLint;
 import android.arch.lifecycle.LiveData;
 import android.arch.paging.PagedList;
+import android.os.AsyncTask;
 
 import com.banderkat.trendingmovies.data.models.Movie;
+import com.banderkat.trendingmovies.data.models.MovieFlag;
 import com.banderkat.trendingmovies.data.models.MovieInfo;
 import com.banderkat.trendingmovies.data.models.MovieReview;
 import com.banderkat.trendingmovies.data.models.MovieVideo;
@@ -26,14 +29,17 @@ public class MovieRepository {
     public final MovieDao movieDao;
     public final ReviewDao reviewDao;
     public final VideoDao videoDao;
+    public final FlagDao flagDao;
     public final String apiKey;
 
     @Inject
-    public MovieRepository(MovieWebservice movieWebservice, MovieDao movieDao, ReviewDao reviewDao, VideoDao videoDao, String apiKey) {
+    public MovieRepository(MovieWebservice movieWebservice, MovieDao movieDao, ReviewDao reviewDao,
+                           VideoDao videoDao, FlagDao flagDao, String apiKey) {
         this.movieWebservice = movieWebservice;
         this.movieDao = movieDao;
         this.reviewDao = reviewDao;
         this.videoDao = videoDao;
+        this.flagDao = flagDao;
         this.apiKey = apiKey;
     }
 
@@ -47,7 +53,7 @@ public class MovieRepository {
     }
 
     public LiveData<Resource<PagedList<Movie>>> loadMovies(boolean isMostPopular) {
-        return new MovieNetworkBoundResource(movieDao, videoDao, movieWebservice, apiKey, isMostPopular)
+        return new MovieNetworkBoundResource(movieDao, videoDao, reviewDao, movieWebservice, apiKey, isMostPopular)
                 .getAsLiveData();
     }
 
@@ -59,5 +65,16 @@ public class MovieRepository {
     public LiveData<Resource<List<MovieReview>>> loadMovieReviews(long movieId) {
         return new ReviewNetworkBoundResource(reviewDao, movieWebservice, apiKey, movieId)
                 .getAsLiveData();
+    }
+
+    @SuppressLint("StaticFieldLeak")
+    public void setFlag(MovieFlag flag) {
+        new AsyncTask<Void, Void, Void>() {
+            @Override
+            protected Void doInBackground(Void... voids) {
+                flagDao.save(flag);
+                return null;
+            }
+        }.execute();
     }
 }

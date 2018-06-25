@@ -1,6 +1,7 @@
 package com.banderkat.trendingmovies.data.models;
 
 import android.arch.persistence.room.Embedded;
+import android.arch.persistence.room.Ignore;
 import android.arch.persistence.room.Relation;
 
 import java.util.List;
@@ -8,7 +9,7 @@ import java.util.List;
 public class MovieInfo {
 
     @Embedded
-    private final Movie movie;
+    private Movie movie;
 
     @Relation(parentColumn = "id", entityColumn = "movie_id", entity = MovieVideo.class)
     private List<MovieVideo> videos;
@@ -16,8 +17,11 @@ public class MovieInfo {
     @Relation(parentColumn = "id", entityColumn = "movie_id", entity = MovieReview.class)
     private List<MovieReview> reviews;
 
-    public MovieInfo(Movie movie) {
+    private boolean favorite;
+
+    public MovieInfo(Movie movie, boolean favorite) {
         this.movie = movie;
+        this.favorite = favorite;
     }
 
     public Movie getMovie() {
@@ -38,5 +42,17 @@ public class MovieInfo {
 
     public void setReviews(List<MovieReview> reviews) {
         this.reviews = reviews;
+    }
+
+    public boolean isFavorite() {
+        return favorite;
+    }
+
+    public void setFavorite(boolean favorite) {
+        this.favorite = favorite;
+    }
+
+    public void setMovie(Movie movie) {
+        this.movie = movie;
     }
 }

@@ -33,7 +33,10 @@ public abstract class MovieDao {
     public abstract LiveData<Movie> getMovie(long movieId);
 
     @Transaction
-    @Query("SELECT * FROM movie WHERE id = :movieId")
+    @Query("SELECT movie.*, movie_flag.favorite AS favorite " +
+            "FROM movie " +
+            "LEFT JOIN movie_flag ON movie.id = movie_flag.id " +
+            "WHERE movie.id = :movieId")
     public abstract LiveData<MovieInfo> getMovieInfo(long movieId);
 
     @SuppressWarnings("StaticFieldLeak")
