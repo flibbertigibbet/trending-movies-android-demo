@@ -30,6 +30,7 @@ public class MovieNetworkBoundResource extends NetworkBoundResource<PagedList<Mo
     public String apiKey;
 
     private boolean isMostPopular;
+    private boolean onlyFavorites;
 
     public MovieDao movieDao;
     public VideoDao videoDao;
@@ -38,7 +39,7 @@ public class MovieNetworkBoundResource extends NetworkBoundResource<PagedList<Mo
 
     public MovieNetworkBoundResource(MovieDao movieDao, VideoDao videoDao, ReviewDao reviewDao,
                                      MovieWebservice movieWebservice,
-                                     String apiKey, boolean isMostPopular) {
+                                     String apiKey, boolean isMostPopular, boolean onlyFavorites) {
         super();
         this.movieDao = movieDao;
         this.videoDao = videoDao;
@@ -46,6 +47,7 @@ public class MovieNetworkBoundResource extends NetworkBoundResource<PagedList<Mo
         this.movieWebservice = movieWebservice;
         this.apiKey = apiKey;
         this.isMostPopular = isMostPopular;
+        this.onlyFavorites = onlyFavorites;
 
         setupSource(FIRST_PAGE);
     }
@@ -77,6 +79,9 @@ public class MovieNetworkBoundResource extends NetworkBoundResource<PagedList<Mo
 
     @Override
     protected boolean fetchPageFromNetwork(@Nullable PagedList<Movie> data, int pageNumber) {
+        if (onlyFavorites) {
+            return false;
+        }
         if (data == null || data.isEmpty()) {
             return true;
         }
@@ -107,7 +112,11 @@ public class MovieNetworkBoundResource extends NetworkBoundResource<PagedList<Mo
     protected LiveData<PagedList<Movie>> loadFromDb(int pageNumber) {
 
         DataSource.Factory<Integer, Movie> factory;
-        if (isMostPopular) {
+
+        if (onlyFavorites) {
+            Log.d(LOG_LABEL, "Factory for favorited movies");
+            factory = movieDao.getFavoriteMovies();
+        } else if (isMostPopular) {
             Log.d(LOG_LABEL, "Factory for popular movies");
             factory = movieDao.getPopularMovies(pageNumber);
         } else {
@@ -139,18 +148,23 @@ public class MovieNetworkBoundResource extends NetworkBoundResource<PagedList<Mo
                 super.onItemAtEndLoaded(itemAtEnd);
                 Log.d(LOG_LABEL, "onItemAtEndLoaded");
                 int lastPage;
-                if (isMostPopular) {
-                    lastPage = (int)itemAtEnd.getPopularPage();
+
+                if (!onlyFavorites) {
+                    if (isMostPopular) {
+                        lastPage = (int)itemAtEnd.getPopularPage();
+                    } else {
+                        lastPage = (int)itemAtEnd.getTopRatedPage();
+                    }
+
+                    if (lastPage < FIRST_PAGE) {
+                        Log.e(LOG_LABEL, "Failed to find last loaded page to load next");
+                        return;
+                    }
+
+                    setupSource(lastPage + 1);
                 } else {
-                    lastPage = (int)itemAtEnd.getTopRatedPage();
+                    Log.d(LOG_LABEL, "not attempting to load any more favorites; should have them all");
                 }
-
-                if (lastPage < FIRST_PAGE) {
-                    Log.e(LOG_LABEL, "Failed to find last loaded page to load next");
-                    return;
-                }
-
-                setupSource(lastPage + 1);
 
             }
         }).setInitialLoadKey(1).build();

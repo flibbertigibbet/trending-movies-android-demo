@@ -28,9 +28,9 @@ public class MovieViewModel extends ViewModel {
         this.movieRepository = movieRepository;
     }
 
-    public LiveData<Resource<PagedList<Movie>>> loadMovies(boolean isMostPopular) {
+    public LiveData<Resource<PagedList<Movie>>> loadMovies(boolean isMostPopular, boolean onlyFavorites) {
         Log.d(LOG_LABEL, "loading movies in view model. is most popular: " + isMostPopular);
-        return movieRepository.loadMovies(isMostPopular);
+        return movieRepository.loadMovies(isMostPopular, onlyFavorites);
     }
 
     public LiveData<Resource<List<MovieVideo>>> loadMovieVideos(long movieId) {

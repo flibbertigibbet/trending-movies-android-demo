@@ -13,4 +13,10 @@
         android:checkable="true"
         android:checked="false"
         app:showAsAction="never" />
+    <item
+        android:id="@+id/action_sort_favorites"
+        android:title="@string/sort_by_favorited"
+        android:checkable="true"
+        android:checked="false"
+        app:showAsAction="never" />
 </menu>

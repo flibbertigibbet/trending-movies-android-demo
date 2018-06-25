@@ -44,6 +44,7 @@ public class MainActivity extends AppCompatActivity implements MoviePosterAdapte
     RecyclerView.LayoutManager layoutManager;
 
     private boolean sortByMostPopular = true;
+    private boolean sortByFavorited = false;
 
     private LiveData<Resource<PagedList<Movie>>> liveData;
     private PagedList<Movie> pagedList;
@@ -76,13 +77,21 @@ public class MainActivity extends AppCompatActivity implements MoviePosterAdapte
         loadMovies();
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        // Reload data in case filtered to favorites and user came back from detail view
+        // where favorite may have changed.
+        loadMovies();
+    }
+
     private void loadMovies() {
-        Log.d(LOG_LABEL, "loadMovies. most popular? " + sortByMostPopular);
+        Log.d(LOG_LABEL, "loadMovies. most popular? " + sortByMostPopular + " favorited? " + sortByFavorited);
         if (liveData != null) {
             liveData.removeObservers(this);
         }
 
-        liveData = viewModel.loadMovies(sortByMostPopular);
+        liveData = viewModel.loadMovies(sortByMostPopular, sortByFavorited);
         liveData.observe(this, response -> {
             if (response == null || response.data == null) {
                 if (response != null) {
@@ -99,14 +108,13 @@ public class MainActivity extends AppCompatActivity implements MoviePosterAdapte
             }
 
             if (response.data.isEmpty()) {
-                Log.w(LOG_LABEL, "Found no movies.");
-                return;
+                Log.w(LOG_LABEL, "Found no movies.");;
             }
 
             pagedList = response.data;
 
             long page = FIRST_PAGE;
-            if (!pagedList.isEmpty()) {
+            if (!pagedList.isEmpty() && !sortByFavorited) {
                 Movie movie = pagedList.get(0);
                 if (movie != null) {
                     page = sortByMostPopular ? movie.getPopularPage() : movie.getTopRatedPage();
@@ -140,17 +148,30 @@ public class MainActivity extends AppCompatActivity implements MoviePosterAdapte
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
+
         item.setChecked(true);
+
         switch (item.getItemId()) {
             case R.id.action_sort_most_popular:
                 Log.d(LOG_LABEL, "sort most popular");
                 sortByMostPopular = true;
+                sortByFavorited = false;
                 menu.getItem(1).setChecked(false);
+                menu.getItem(2).setChecked(false);
                 break;
             case R.id.action_sort_top_rated:
                 Log.d(LOG_LABEL, "sort top rated");
                 sortByMostPopular = false;
+                sortByFavorited = false;
                 menu.getItem(0).setChecked(false);
+                menu.getItem(2).setChecked(false);
+                break;
+            case R.id.action_sort_favorites:
+                Log.d(LOG_LABEL, "filter to favorited");
+                sortByFavorited = true;
+                sortByMostPopular = false;
+                menu.getItem(0).setChecked(false);
+                menu.getItem(1).setChecked(false);
                 break;
             default:
                 Log.e(LOG_LABEL, "Unrecognized menu option " + item.getItemId());
@@ -178,7 +199,7 @@ public class MainActivity extends AppCompatActivity implements MoviePosterAdapte
 
     @Override
     public void loadNext(int index) {
-        if (pagedList != null) {
+        if (pagedList != null && !sortByFavorited) {
             Log.d(LOG_LABEL, "Scrolled to bottom; load next page");
             // support infinite scrolling with paginated results
             pagedList.loadAround(index + PAGE_SIZE);

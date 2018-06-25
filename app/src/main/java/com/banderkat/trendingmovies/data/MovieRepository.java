@@ -52,8 +52,8 @@ public class MovieRepository {
         return movieDao.getMovieInfo(movieId);
     }
 
-    public LiveData<Resource<PagedList<Movie>>> loadMovies(boolean isMostPopular) {
-        return new MovieNetworkBoundResource(movieDao, videoDao, reviewDao, movieWebservice, apiKey, isMostPopular)
+    public LiveData<Resource<PagedList<Movie>>> loadMovies(boolean isMostPopular, boolean onlyFavorites) {
+        return new MovieNetworkBoundResource(movieDao, videoDao, reviewDao, movieWebservice, apiKey, isMostPopular, onlyFavorites)
                 .getAsLiveData();
     }
 
