@@ -27,15 +27,15 @@ public class MovieNetworkBoundResource extends NetworkBoundResource<PagedList<Mo
     // maximum rate at which to refresh data from network
     private static final long RATE_LIMIT = TimeUnit.HOURS.toMillis(1);
 
-    public String apiKey;
+    public final String apiKey;
 
-    private boolean isMostPopular;
-    private boolean onlyFavorites;
+    private final boolean isMostPopular;
+    private final boolean onlyFavorites;
 
-    public MovieDao movieDao;
-    public VideoDao videoDao;
-    public ReviewDao reviewDao;
-    public MovieWebservice movieWebservice;
+    public final MovieDao movieDao;
+    public final VideoDao videoDao;
+    public final ReviewDao reviewDao;
+    public final MovieWebservice movieWebservice;
 
     public MovieNetworkBoundResource(MovieDao movieDao, VideoDao videoDao, ReviewDao reviewDao,
                                      MovieWebservice movieWebservice,
@@ -87,6 +87,11 @@ public class MovieNetworkBoundResource extends NetworkBoundResource<PagedList<Mo
         }
 
         Movie first = data.get(0);
+
+        if (first == null) {
+            return true;
+        }
+
         boolean expired = (System.currentTimeMillis() - first.getTimestamp()) > RATE_LIMIT;
         if (expired) {
             Log.d(LOG_LABEL, "Clearing cache in database");

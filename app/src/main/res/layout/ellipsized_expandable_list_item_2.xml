@@ -7,8 +7,8 @@
     android:paddingTop="2dip"
     android:paddingBottom="2dip"
     android:paddingStart="?android:attr/expandableListPreferredItemPaddingLeft"
-    android:mode="twoLine"
-    >
+    android:paddingEnd="?android:attr/expandableListPreferredItemPaddingLeft"
+    android:mode="twoLine">
 
     <TextView android:id="@android:id/text1"
         android:layout_width="match_parent"

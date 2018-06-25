@@ -36,11 +36,11 @@ android {
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation 'com.android.support:appcompat-v7:27.1.1'
-    implementation 'com.android.support.constraint:constraint-layout:1.1.0'
+    implementation 'com.android.support.constraint:constraint-layout:1.1.2'
     implementation 'com.squareup.picasso:picasso:2.5.2'
     // Architecture Components
     def archComponentsVersion = '1.1.1'
-    def roomVersion = '1.1.0'
+    def roomVersion = '1.1.1'
     // ViewModel and LiveData
     implementation "android.arch.lifecycle:extensions:$archComponentsVersion"
     // Java8 support for Lifecycles

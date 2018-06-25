@@ -3,7 +3,6 @@ package com.banderkat.trendingmovies.data.networkresource;
 import android.arch.lifecycle.LiveData;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.util.Log;
 
 import com.banderkat.trendingmovies.data.MovieWebservice;
 import com.banderkat.trendingmovies.data.VideoDao;
@@ -16,9 +15,9 @@ public class VideoNetworkBoundResource extends NetworkBoundResource<List<MovieVi
 
     private static final String LOG_LABEL = "VideoNetworkResource";
 
-    public String apiKey;
-    public VideoDao videoDao;
-    public MovieWebservice movieWebservice;
+    public final String apiKey;
+    public final VideoDao videoDao;
+    public final MovieWebservice movieWebservice;
 
     private final long movieId;
 
@@ -42,7 +41,7 @@ public class VideoNetworkBoundResource extends NetworkBoundResource<List<MovieVi
 
     @NonNull
     @Override
-    protected LiveData loadFromDb(int pageNumber) {
+    protected LiveData<List<MovieVideo>> loadFromDb(int pageNumber) {
         return videoDao.getMovieVideos(movieId);
     }
 

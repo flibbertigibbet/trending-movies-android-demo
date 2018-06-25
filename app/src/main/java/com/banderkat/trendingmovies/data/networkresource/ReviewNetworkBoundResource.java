@@ -15,9 +15,9 @@ public class ReviewNetworkBoundResource extends NetworkBoundResource<List<MovieR
 
     private static final String LOG_LABEL = "ReviewNetworkResource";
 
-    public String apiKey;
-    public ReviewDao reviewDao;
-    public MovieWebservice movieWebservice;
+    public final String apiKey;
+    public final ReviewDao reviewDao;
+    public final MovieWebservice movieWebservice;
 
     private final long movieId;
 

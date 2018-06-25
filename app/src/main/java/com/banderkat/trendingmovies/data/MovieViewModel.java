@@ -11,7 +11,6 @@ import com.banderkat.trendingmovies.data.models.MovieInfo;
 import com.banderkat.trendingmovies.data.models.MovieReview;
 import com.banderkat.trendingmovies.data.models.MovieVideo;
 import com.banderkat.trendingmovies.data.networkresource.Resource;
-import com.banderkat.trendingmovies.trendingmovies.R;
 
 import java.util.List;
 

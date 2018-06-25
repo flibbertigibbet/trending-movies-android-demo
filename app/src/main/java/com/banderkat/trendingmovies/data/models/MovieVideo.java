@@ -34,7 +34,7 @@ public class MovieVideo {
     private final String type;
 
 
-    public MovieVideo(String id, String language, String country, String key, String name, String site, Integer size, String type) {
+    public MovieVideo(@NonNull String id, String language, String country, String key, String name, String site, Integer size, String type) {
         this.id = id;
         this.language = language;
         this.country = country;
@@ -58,6 +58,7 @@ public class MovieVideo {
         this.movieId = movieId;
     }
 
+    @NonNull
     public String getId() {
         return id;
     }

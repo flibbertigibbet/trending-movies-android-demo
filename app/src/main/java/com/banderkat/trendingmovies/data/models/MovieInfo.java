@@ -1,7 +1,6 @@
 package com.banderkat.trendingmovies.data.models;
 
 import android.arch.persistence.room.Embedded;
-import android.arch.persistence.room.Ignore;
 import android.arch.persistence.room.Relation;
 
 import java.util.List;

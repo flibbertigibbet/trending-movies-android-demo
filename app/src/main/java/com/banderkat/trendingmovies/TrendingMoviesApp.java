@@ -10,7 +10,6 @@ import com.banderkat.trendingmovies.trendingmovies.BuildConfig;
 
 import javax.inject.Inject;
 
-import dagger.Module;
 import dagger.android.AndroidInjector;
 import dagger.android.DispatchingAndroidInjector;
 import dagger.android.HasActivityInjector;

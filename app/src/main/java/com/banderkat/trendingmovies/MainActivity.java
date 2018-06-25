@@ -108,7 +108,7 @@ public class MainActivity extends AppCompatActivity implements MoviePosterAdapte
             }
 
             if (response.data.isEmpty()) {
-                Log.w(LOG_LABEL, "Found no movies.");;
+                Log.w(LOG_LABEL, "Found no movies.");
             }
 
             pagedList = response.data;
