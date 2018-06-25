@@ -3,6 +3,7 @@ package com.banderkat.trendingmovies.di;
 import android.app.Application;
 
 import com.banderkat.trendingmovies.MovieDetailActivity;
+import com.banderkat.trendingmovies.ReviewActivity;
 import com.banderkat.trendingmovies.TrendingMoviesApp;
 import com.banderkat.trendingmovies.data.networkresource.MovieNetworkBoundResource;
 
@@ -25,6 +26,7 @@ import dagger.android.AndroidInjectionModule;
         // Activities
         MainActivityModule.class,
         MovieDetailActivityModule.class,
+        ReviewActivityModule.class
 })
 public interface AppComponent {
     @Component.Builder

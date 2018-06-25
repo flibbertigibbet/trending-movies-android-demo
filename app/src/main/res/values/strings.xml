@@ -6,4 +6,6 @@
     <string name="favorite">Favorite</string>
     <string name="details_videos_group">Videos</string>
     <string name="details_reviews_group">Reviews</string>
+    <string name="title_activity_review">Movie Review</string>
+    <string name="review_author_byline">By: %1$s</string>
 </resources>

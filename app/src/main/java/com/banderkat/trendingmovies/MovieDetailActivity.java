@@ -35,6 +35,7 @@ import java.util.Map;
 
 import javax.inject.Inject;
 
+import static com.banderkat.trendingmovies.ReviewActivity.MOVIE_ID_REVIEW_KEY;
 import static java.util.Locale.US;
 
 public class MovieDetailActivity extends AppCompatActivity {
@@ -205,7 +206,7 @@ public class MovieDetailActivity extends AppCompatActivity {
                 new String[] {groupName},
                 new int[] { android.R.id.text1 },
                 childData,
-                android.R.layout.simple_expandable_list_item_2,
+                R.layout.ellipsized_expandable_list_item_2,
                 new String[] { nameValue, valueName },
                 new int[] { android.R.id.text1, android.R.id.text2 });
 
@@ -221,6 +222,7 @@ public class MovieDetailActivity extends AppCompatActivity {
                     break;
                 case 1:
                     // Review row clicked
+                    goToReviewAtIndex(childPosition);
                     break;
                 default:
                     Log.e(LOG_LABEL, "unrecognized group " + groupPosition);
@@ -229,6 +231,20 @@ public class MovieDetailActivity extends AppCompatActivity {
         });
 
         Log.d(LOG_LABEL, "Set up expandable list adapter");
+    }
+
+    private void goToReviewAtIndex(int index) {
+        if (movie == null || !movie.gotReviews() || movieInfo == null || movieInfo.getReviews() == null) {
+            Log.e(LOG_LABEL, "Cannot get review for index " + index);
+            return;
+        }
+
+        Log.d(LOG_LABEL, "go to review for index " + index);
+        MovieReview review = movieInfo.getReviews().get(index);
+        Intent intent = new Intent(this, ReviewActivity.class);
+        intent.putExtra(MOVIE_ID_DETAIL_KEY, movieId);
+        intent.putExtra(MOVIE_ID_REVIEW_KEY, review.getId());
+        startActivity(intent);
     }
 
     private void goToVideoAtIndex(int index) {
