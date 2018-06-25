@@ -4,6 +4,7 @@ import android.app.Application;
 import android.arch.persistence.room.Room;
 import android.util.Log;
 
+import com.banderkat.trendingmovies.data.FlagDao;
 import com.banderkat.trendingmovies.data.MovieDao;
 import com.banderkat.trendingmovies.data.MovieDatabase;
 import com.banderkat.trendingmovies.data.MovieWebservice;
@@ -80,6 +81,12 @@ class AppModule {
     @Provides
     ReviewDao provideReviewDao(MovieDatabase db) {
         return db.reviewDao();
+    }
+
+    @Singleton
+    @Provides
+    FlagDao provideFlagDao(MovieDatabase db) {
+        return db.flagDao();
     }
 
     @Singleton

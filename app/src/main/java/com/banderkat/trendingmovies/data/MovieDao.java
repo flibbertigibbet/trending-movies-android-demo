@@ -20,20 +20,29 @@ import java.util.List;
 @Dao
 public abstract class MovieDao {
 
-    @Query("SELECT * from movie WHERE popular_page = :pageNumber ORDER BY popular_page_order ASC")
+    @Query("SELECT * FROM movie WHERE popular_page = :pageNumber ORDER BY popular_page_order ASC")
     public abstract MoviePopularPagedDataSource.Factory<Integer, Movie> getPopularMovies(int pageNumber);
 
-    @Query("SELECT * from movie WHERE top_rated_page = :pageNumber ORDER BY top_rated_page_order ASC")
+    @Query("SELECT * FROM movie WHERE top_rated_page = :pageNumber ORDER BY top_rated_page_order ASC")
     public abstract MovieTopRatedPagedDataSource.Factory<Integer, Movie> getTopRatedMovies(long pageNumber);
 
-    @Query("SELECT * from movie")
+    @Query("SELECT movie.* FROM movie " +
+            "INNER JOIN movie_flag ON movie.id = movie_flag.id " +
+            "WHERE movie_flag.favorite = 1 " +
+            "ORDER BY movie.title ASC")
+    public abstract MovieTopRatedPagedDataSource.Factory<Integer, Movie> getFavoriteMovies();
+
+    @Query("SELECT * FROM movie")
     public abstract LiveData<List<Movie>> getMovies();
 
     @Query("SELECT * FROM movie WHERE id = :movieId")
     public abstract LiveData<Movie> getMovie(long movieId);
 
     @Transaction
-    @Query("SELECT * FROM movie WHERE id = :movieId")
+    @Query("SELECT movie.*, movie_flag.favorite AS favorite " +
+            "FROM movie " +
+            "LEFT JOIN movie_flag ON movie.id = movie_flag.id " +
+            "WHERE movie.id = :movieId")
     public abstract LiveData<MovieInfo> getMovieInfo(long movieId);
 
     @SuppressWarnings("StaticFieldLeak")

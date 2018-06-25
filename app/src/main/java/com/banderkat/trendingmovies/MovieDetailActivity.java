@@ -1,5 +1,6 @@
 package com.banderkat.trendingmovies;
 
+import android.arch.lifecycle.LiveData;
 import android.arch.lifecycle.ViewModelProviders;
 import android.content.ActivityNotFoundException;
 import android.content.Intent;
@@ -15,6 +16,7 @@ import android.widget.SimpleExpandableListAdapter;
 
 import com.banderkat.trendingmovies.data.MovieViewModel;
 import com.banderkat.trendingmovies.data.models.Movie;
+import com.banderkat.trendingmovies.data.models.MovieFlag;
 import com.banderkat.trendingmovies.data.models.MovieInfo;
 import com.banderkat.trendingmovies.data.models.MovieReview;
 import com.banderkat.trendingmovies.data.models.MovieVideo;
@@ -89,7 +91,8 @@ public class MovieDetailActivity extends AppCompatActivity {
         headerBinding = DataBindingUtil.bind(header);
         binding.movieDetailExpandableList.addHeaderView(header);
 
-        viewModel.getMovieInfo(movieId).observe(this, movieInfo -> {
+        LiveData<MovieInfo> data = viewModel.getMovieInfo(movieId);
+        data.observe(this, movieInfo -> {
             if (movieInfo == null || movieInfo.getMovie() == null) {
                 Log.e(LOG_LABEL, "Could not find movie to show detail for ID: " + movieId);
                 return;
@@ -136,6 +139,7 @@ public class MovieDetailActivity extends AppCompatActivity {
             }
 
             if (movie.gotVideos() && movie.gotReviews()) {
+                data.removeObservers(this);
                 setUpExpandableList(movieInfo);
             }
 
@@ -159,6 +163,17 @@ public class MovieDetailActivity extends AppCompatActivity {
                     .placeholder(R.drawable.ic_image_placeholder_white_185x277dp)
                     .fit()
                     .into(headerBinding.movieDetailPoster);
+
+            headerBinding.movieDetailFavoriteButton.setOnClickListener(v -> {
+                boolean newFavorite = !movieInfo.isFavorite();
+                MovieFlag flag = new MovieFlag(movieId, newFavorite);
+                movieInfo.setFavorite(newFavorite);
+
+                Log.d(LOG_LABEL, "setting movie favorite flag to: " + newFavorite);
+                viewModel.setMovieFlag(flag);
+                Log.d(LOG_LABEL, "favorite? " + movieInfo.isFavorite());
+                headerBinding.setMovieInfo(movieInfo);
+            });
         });
     }
 
