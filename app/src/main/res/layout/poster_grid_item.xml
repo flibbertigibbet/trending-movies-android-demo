@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <data>
+        <variable name="movie" type="com.banderkat.trendingmovies.data.models.Movie" />
+        <variable name="position" type="Integer" />
+        <variable name="adapter" type="com.banderkat.trendingmovies.MoviePosterAdapter" />
+        <import type="android.view.View"/>
+    </data>
+
+    <ImageView
+        android:id="@+id/poster_grid_item_image"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:padding="0dp"
+        android:scaleType="fitCenter"
+        android:background="@color/primaryDarkColor"
+        app:imageUrl="@{movie.posterPath}"
+        android:contentDescription="@{movie.title}" />
+</layout>
+

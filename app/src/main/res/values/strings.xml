@@ -1,0 +1,12 @@
+<resources>
+    <string name="app_name">Trending Movies</string>
+    <string name="sort_by_most_popular">Sort by most popular</string>
+    <string name="sort_by_top_rated">Sort by top rated</string>
+    <string name="ratings_display">%1$.2f / 10</string>
+    <string name="favorite">Favorite</string>
+    <string name="details_videos_group">Videos</string>
+    <string name="details_reviews_group">Reviews</string>
+    <string name="title_activity_review">Movie Review</string>
+    <string name="review_author_byline">By: %1$s</string>
+    <string name="sort_by_favorited">Show favorites</string>
+</resources>
