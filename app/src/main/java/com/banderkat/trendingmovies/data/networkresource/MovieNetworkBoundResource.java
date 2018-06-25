@@ -11,6 +11,7 @@ import android.util.Log;
 import com.banderkat.trendingmovies.data.MovieDao;
 import com.banderkat.trendingmovies.data.MovieRepository;
 import com.banderkat.trendingmovies.data.MovieWebservice;
+import com.banderkat.trendingmovies.data.ReviewDao;
 import com.banderkat.trendingmovies.data.VideoDao;
 import com.banderkat.trendingmovies.data.models.Movie;
 import com.banderkat.trendingmovies.data.models.MovieQueryResponse;
@@ -32,13 +33,16 @@ public class MovieNetworkBoundResource extends NetworkBoundResource<PagedList<Mo
 
     public MovieDao movieDao;
     public VideoDao videoDao;
+    public ReviewDao reviewDao;
     public MovieWebservice movieWebservice;
 
-    public MovieNetworkBoundResource(MovieDao movieDao, VideoDao videoDao, MovieWebservice movieWebservice,
+    public MovieNetworkBoundResource(MovieDao movieDao, VideoDao videoDao, ReviewDao reviewDao,
+                                     MovieWebservice movieWebservice,
                                      String apiKey, boolean isMostPopular) {
         super();
         this.movieDao = movieDao;
         this.videoDao = videoDao;
+        this.reviewDao = reviewDao;
         this.movieWebservice = movieWebservice;
         this.apiKey = apiKey;
         this.isMostPopular = isMostPopular;
@@ -86,6 +90,7 @@ public class MovieNetworkBoundResource extends NetworkBoundResource<PagedList<Mo
             Log.d(LOG_LABEL, "rate limit: " + RATE_LIMIT);
             movieDao.clear(); // throw out the full cache
             videoDao.clear();
+            reviewDao.clear();
             return true;
         } else {
             long lastPage = isMostPopular ? first.getPopularPage() : first.getTopRatedPage();
