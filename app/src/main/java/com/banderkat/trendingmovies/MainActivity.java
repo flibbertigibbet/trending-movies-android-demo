@@ -32,6 +32,9 @@ public class MainActivity extends AppCompatActivity implements MoviePosterAdapte
     private  static final String LOG_LABEL = "MainActivity";
     public static final int NUM_COLUMNS = 2;
 
+    private static final String SORT_BY_MOST_POPULAR_KEY = "sort_popular";
+    private static final String FILTER_TO_FAVORITES_KEY = "filter_favorites";
+
     @SuppressWarnings("WeakerAccess")
     @Inject
     MovieViewModelFactory viewModelFactory;
@@ -74,6 +77,7 @@ public class MainActivity extends AppCompatActivity implements MoviePosterAdapte
 
         viewModel = ViewModelProviders.of(this, viewModelFactory)
                 .get(MovieViewModel.class);
+
         loadMovies();
     }
 
@@ -83,6 +87,29 @@ public class MainActivity extends AppCompatActivity implements MoviePosterAdapte
         // Reload data in case filtered to favorites and user came back from detail view
         // where favorite may have changed.
         loadMovies();
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putBoolean(SORT_BY_MOST_POPULAR_KEY, sortByMostPopular);
+        outState.putBoolean(FILTER_TO_FAVORITES_KEY, sortByFavorited);
+    }
+
+    @Override
+    protected void onRestoreInstanceState(Bundle savedInstanceState) {
+        super.onRestoreInstanceState(savedInstanceState);
+
+        if (savedInstanceState != null) {
+            if (savedInstanceState.containsKey(SORT_BY_MOST_POPULAR_KEY) &&
+                    savedInstanceState.containsKey(FILTER_TO_FAVORITES_KEY)) {
+                Log.d(LOG_LABEL, "restoring settings from bundle");
+                sortByMostPopular = savedInstanceState.getBoolean(SORT_BY_MOST_POPULAR_KEY, true);
+                sortByFavorited = savedInstanceState.getBoolean(FILTER_TO_FAVORITES_KEY, false);
+            }
+        }
+
+        Log.d(LOG_LABEL, "onRestoreInstanceState");
     }
 
     private void loadMovies() {
@@ -184,8 +211,17 @@ public class MainActivity extends AppCompatActivity implements MoviePosterAdapte
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
+        Log.d(LOG_LABEL, "onCreateOptionsMenu");
         getMenuInflater().inflate(R.menu.sort_menu, menu);
         this.menu = menu;
+
+        // restore menu settings
+        if (sortByFavorited) {
+            onOptionsItemSelected(menu.findItem(R.id.action_sort_favorites));
+        } else if (!sortByMostPopular) {
+            onOptionsItemSelected(menu.findItem(R.id.action_sort_top_rated));
+        }
+
         return true;
     }
 
